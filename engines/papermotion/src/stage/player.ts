@@ -19,6 +19,8 @@ export interface StageHooks {
   frame(n: number): string;
   /** Render frame `n` and return the stage's probe. */
   probe(n: number): Record<string, unknown>;
+  /** Render frame `n` and leave it on the canvas, for an encoder in the page to take (see scripts/webcodecs.ts). */
+  draw(n: number): void;
   /**
    * Simulate up to frame `n` without drawing (increasing order), so a render worker can start in the
    * middle of the film: the simulation is deterministic, so frames drawn after a seek match a full run.
@@ -63,6 +65,7 @@ export function mount(canvas: HTMLCanvasElement, make: (canvas: HTMLCanvasElemen
     meta: { fps: stage.fps, frames: stage.frames, width: stage.width, height: stage.height },
     frame: n => { stage.renderFrame(n); return canvas.toDataURL('image/jpeg', 0.95); },
     probe: n => { stage.renderFrame(n); return stage.probe(); },
+    draw: n => stage.renderFrame(n),
     seek: n => stage.advance(n),
     audio: (sampleRate = 48000) => {
       stage.advance(stage.frames - 1);

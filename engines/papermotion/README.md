@@ -93,6 +93,7 @@ if anything did.
 | `--workers N` | Number of workers, each in its own browser (default 4). Frames are dealt out in turn so heavy stretches are shared. |
 | `--gpu` | Draw on the GPU: through Metal on macOS, through Mesa's d3d12 driver on WSL2 (see `../../tools/gpu/`). Without it frames are drawn on the CPU, which is bit-exact. The render prints what Chrome really draws with, and warns when it isn't what was asked for. |
 | `--codec x264\|nvenc\|videotoolbox\|hw` | The encoder: x264 (default), NVIDIA NVENC, Apple VideoToolbox, or `hw` for this machine's own (VideoToolbox on macOS, NVENC elsewhere, x264 if it can't run). A hardware encoder is tried on a few frames before the drawing starts. |
+| `--codec webcodecs` | Encode in the page with WebCodecs on the browser's hardware encoder (VideoToolbox on a Mac, with `--gpu`): no JPEG frames, each worker encodes a run of frames and the runs join end to end (`scripts/webcodecs.ts`). About 2× faster where drawing is cheap; falls back to `hw` where the browser has no hardware encoder. |
 | `--range a:b` | Only frames a…b−1 (a partial range gets no sound). |
 | `--bench` | Draw and time the frames without writing or encoding anything. |
 | `--shared` | All workers in one browser. Usually slower; kept for comparison. |
@@ -118,7 +119,8 @@ On a MacBook Air with an Apple M4 (24 GB), 2 Metal workers draw a 1080p frame in
   (sets in 3D drawn with `Paper`), exported from `src/index.ts`, with `tests/camera3d.test.ts` and
   `tests/diorama.test.ts`. `src/three/`: `DioramaGL`, a three.js renderer for dioramas, its own entry point (`three`
   is the only runtime dependency), with `tests/three.test.ts`. The rest of `src/` is upstream's engine as published.
-- `scripts/scout.ts` (`pnpm scout`): shot scouting, on the GPU unless `--cpu`.
+- `scripts/scout.ts` (`pnpm scout`): shot scouting, on the GPU unless `--cpu`. `scripts/webcodecs.ts`: encoding in the
+  page for `render:fast --codec webcodecs`, drawing through a `draw(n)` hook in `src/stage/player.ts`.
 - `scripts/render-parallel.ts`: the parallel/GPU renderer. It muxes a scene's soundtrack like
   `pnpm render` does. `scripts/render-detached.sh` (which does without `setsid` on macOS), `bench-cgroup.sh`
   and `bench-page.ts` wrap it.

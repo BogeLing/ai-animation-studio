@@ -18,6 +18,12 @@ corepack pnpm -s render:fast plane --workers 8                               # b
 - `--codec hw` is the machine's own hardware encoder: VideoToolbox on a Mac (6× faster than x264 at about
   the same quality), NVENC elsewhere, x264 if it can't run. A hardware encoder is tried before the drawing
   starts.
+- `--codec webcodecs` (with `--gpu`) encodes in the page, on the browser's hardware encoder, with no JPEG frames:
+  each worker encodes one run of frames and the runs join end to end. It helps most when drawing is cheap: on the
+  M4, `diorama` renders in 6.2 s instead of 8.6 s (drawing and encoding 2.4 s instead of 5.3 s), `showcase` in 27 s
+  instead of 29 s. Quality matches VideoToolbox from JPEGs (44 dB against CPU frames) at a smaller file. Where the
+  browser has no hardware encoder (no `--gpu`, and untested on WSL2) it says so and falls back to `hw`. The frames
+  are decoded back into `out/frames/<name>/`, so `check_video.sh` scans them as usual.
 
 - **GPU workers are limited by the GPU's VRAM.** Each worker adds about 0.4 GB on top of the ~2 GB the
   Windows desktop holds.

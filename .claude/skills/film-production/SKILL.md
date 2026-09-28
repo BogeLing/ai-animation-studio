@@ -123,6 +123,8 @@ every sound by `videoTime`, and lay the score out from the chapters' video times
       More workers stop helping once the GPU's VRAM fills.
     - Apple M4: `--workers 2 --gpu --codec videotoolbox`, ~70 ms/frame; more workers don't help.
     - `--codec hw` picks the machine's own hardware encoder (VideoToolbox on a Mac, NVENC elsewhere).
+    - `--codec webcodecs` encodes in the page on the Mac's hardware encoder, with no JPEGs: about 2× faster where
+      drawing is cheap (sets in 3D), a little faster otherwise.
   - CPU (`--workers 8`) is bit-exact: ~5× slower on the WSL laptop, ~1.5× on the M4.
   - After a GPU render, always run `../../tools/video/check_video.sh out/<name>.mp4 <frames> out/frames/<name>`:
     frame count, decode errors, loudness and a glitch scan.

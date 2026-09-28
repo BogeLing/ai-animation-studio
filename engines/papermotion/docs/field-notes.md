@@ -419,3 +419,15 @@ Clawd, a snowball that grows until it escapes down a hill, and a tree that drops
 - **Speed is not the point.** On the M4, three.js draws the village in 27 ms a frame to the painter's 30 ms (one
   worker, JPEG capture included); what it adds is occlusion and shadows the painter can't do.
 
+## 19. Encoding in the page (`render:fast --codec webcodecs`)
+
+- **Pick quality over latency.** With `latencyMode: 'realtime'` the Mac's hardware encoder took 52 ms a frame and
+  made the path slower than JPEGs; with `'quality'` it takes 19 ms, and still makes no B-frames.
+- **Stamp the frames yourself.** The joined Annex B stream's own timing collapsed after the first run (the film
+  came out 1.67 s long, at "60 fps"). `setts` now sets frame i at i / fps and gives every frame its duration; without
+  the duration, the last frame ended the video early and `-shortest` dropped it when the sound went in (239 of 240).
+- **Check the range by PSNR.** Against CPU frames, in-page encoding scores 44 dB and VideoToolbox from JPEGs 45 dB;
+  a range mix-up would sit near 20. The stream is tagged BT.709, limited range.
+- **The gain follows the drawing cost.** The JPEG round trip is what goes away: `diorama` (7 ms a frame to draw)
+  renders in 6.2 s instead of 8.6 s, `showcase` (59 ms to draw) in 27 s instead of 29 s.
+

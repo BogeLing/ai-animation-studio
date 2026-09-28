@@ -116,6 +116,8 @@ On a MacBook Air with an Apple M4 (10-core GPU, 24 GB), where `--gpu` draws thro
 | --- | --- | --- |
 | `smoke`, 30 frames | `pnpm smoke` | about 12 s |
 | `showcase`, 360 frames | `render:fast --workers 2 --gpu --codec videotoolbox` | 29 s (24 s drawing) |
+| `showcase`, 360 frames | `render:fast --workers 2 --gpu --codec webcodecs` (encoded in the page) | 27 s |
+| `diorama`, 240 frames | the same two ways | 8.6 s and 6.2 s |
 | `showcase`, 360 frames | `render:fast --workers 8` (CPU, x264) | 54 s (36 s drawing) |
 | `showcase` | one CPU page | about 0.4 s a frame |
 
