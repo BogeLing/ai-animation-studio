@@ -24,6 +24,10 @@ All three films were written by Claude (Opus 5.5) in Claude Code, using the skil
 
 ## Quick start
 
+[![Watch the two-minute tutorial: what this is, the commands to start, and how an agent makes a film](media/tutorial.jpg)](https://github.com/BogeLing/ai-animation-studio/releases/download/v0.1.0/ai-animation-studio-tutorial.mp4)
+
+New here? The [two-minute narrated tutorial](https://github.com/BogeLing/ai-animation-studio/releases/download/v0.1.0/ai-animation-studio-tutorial.mp4) (MP4, 23 MB) walks through all of it. It was made with this repository too.
+
 You need Node 24, ffmpeg, and Google Chrome or Chromium (or run `npx playwright-core install chromium`).
 [uv](https://docs.astral.sh/uv/) runs the Python tools. A GPU is optional: `--gpu` draws through Mesa's d3d12
 driver on WSL2 (measured with an NVIDIA card) and through Metal on a Mac (measured on an M4).
@@ -69,6 +73,7 @@ with TSDoc and an example. The `ubc` and `showcase` films use them all.
 | `polaroid.ts` | Instant photos whose pictures are drawn once from the set's own props, their flight to a stack and an album, a hand camera and a flash. |
 | `lofi.ts` | A warm lo-fi score from a few parameters: electric-piano chords, bass, a half-time beat, a tune and vinyl crackle, laid out in video time. |
 | `foley.ts` | Normalised paper-world sound effects: pops, knocks, slides, whooshes, tape, taps, stamps, a bin clank, a shutter, a photo whirr, chimes, birds, gulls and surf. |
+| `narration.ts` | A voice track with the time of every word: boards fill in on the narrator's words and subtitles follow the voice. `tools/voice/narrate.py` voices a script locally with Kokoro-82M. |
 | `kit.ts` | Pop-up helpers (one-sheet props, entrances, shapes, cartoon faces) and a clock that fires each sound cue exactly once. |
 | `Clawd.ts`, `Plane.ts` | The cast: a paper rig of the Claude Code mascot, and a paper dart that flies along a track. |
 
@@ -114,6 +119,7 @@ Cloud Run and Modal.
 - This repository: MIT © 2026 Boge Ling ([`LICENSE`](LICENSE)).
 - The papermotion engine: MIT © 2026 Franco Zanardi ([`engines/papermotion/LICENSE`](engines/papermotion/LICENSE)).
   `src/` is upstream's engine with one small addition (a `seek` hook for parallel rendering).
+- The tutorial's narration is a synthetic voice, generated with [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0).
 - Montserrat: SIL Open Font License 1.1 ([`OFL-Montserrat.txt`](engines/papermotion/public/fonts/OFL-Montserrat.txt)).
 - Clawd is the Claude Code mascot by Anthropic, drawn here as fan art. This project is not affiliated with
   or endorsed by Anthropic.

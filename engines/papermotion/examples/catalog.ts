@@ -24,6 +24,12 @@ export const EXAMPLES: Record<string, () => Promise<MakeStage>> = {
     const { ShowcaseScene } = await import('./showcase/main');
     return canvas => new ShowcaseScene(canvas);
   },
+  tutorial: async () => {
+    // The narration (public/voice/tutorial.flac and .json, from tools/voice/narrate.py) is decoded before the stage is built.
+    const { TutorialScene, loadVoice } = await import('./tutorial/main');
+    const voice = await loadVoice('voice/tutorial.flac');
+    return canvas => new TutorialScene(canvas, voice);
+  },
   ubc: async () => {
     const { UbcScene } = await import('./ubc/main');
     return canvas => new UbcScene(canvas);

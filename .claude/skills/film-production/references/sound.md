@@ -60,3 +60,20 @@ style per chapter (guzheng-like in one, electronic in another). What replaced it
 - Re-muxing a new soundtrack onto an existing picture: `listen` first, then
   `../../tools/video/mux.sh out/<name>.mp4 out/<name>.wav out/<name>_new.mp4`. Keep in mind that a
   render in progress uses the code it loaded when it started.
+
+## Narration (a film told by a voice)
+
+- Write the script in blocks (`[id]` per block) and say everything in words: TTS mangles `pnpm` and URLs, so
+  show commands on screen instead. Voice it with `tools/voice/narrate.py script.md public/voice/film.flac`,
+  which writes the audio and every word's time.
+- Load it in the catalog entry (`loadVoice('voice/film.flac')`) and time the picture to the words
+  (`narration.at('install', 'Clone')`) rather than to fixed seconds, so re-voicing re-times the whole film.
+  `narration.subtitles()` gives the captions.
+- Put the voice on its own bus and keep the music bed about 18 dB under it (measure each alone with `listen`
+  by muting the other buses); no melody under speech.
+- Check intelligibility without ears: transcribe the mix (`tools/audio/analyze.py … --model small.en`) and
+  compare with the script. A word the recogniser mishears (it heard "hop walks" as "pop walks") is worth
+  rephrasing.
+- For public videos, say the voice is synthetic (a line in the description or the credits).
+- Picking a TTS: in September 2026 the best-rated voices were cloud APIs, and the ranking differs by
+  language; Kokoro-82M (Apache-2.0) is the local, commercially usable default here.

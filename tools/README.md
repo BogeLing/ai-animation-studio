@@ -14,6 +14,12 @@ installs them into a throwaway environment. The transcription model downloads on
 | `recheck.py` | `uv run tools/audio/recheck.py clip.m4a 5.4:7.45 6.0:7.45 [--pitch 7.3:7.8]`. Re-transcribes short windows with no surrounding text, so words the full pass guessed from context (homophones) get a second opinion. Optionally prints a pitch contour: a Mandarin 2nd tone rises and a 4th tone falls. |
 | `trim_silence.py` | `python3 tools/audio/trim_silence.py in.m4a out.wav [--threshold -40] [--margin 0.05]`. Cuts silence off both ends, fades the edges, and prints the kept span so timings can be shifted. Needs only ffmpeg. |
 
+## voice/
+
+| Script | Use |
+| --- | --- |
+| `narrate.py` | `uv run tools/voice/narrate.py script.md public/voice/film.flac [--voice af_heart] [--speed 1.0] [--gap 0.5]`. Voices a narration script with Kokoro-82M (Apache-2.0) on the CPU, and writes the audio plus a JSON with when every block and word is spoken; `examples/shared/narration.ts` loads both. The script is plain text in blocks (`[id]` or `[id gap=0.9]` on a block's first line). Write what should be said: spell out code and show it on screen instead. |
+
 ## gpu/
 
 | Script | Use |

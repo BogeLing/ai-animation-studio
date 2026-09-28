@@ -85,7 +85,8 @@ Follow this loop. Iterating on numbers and single frames is cheap; full renders 
 - The minimal shape is in [references/scenes.md](references/scenes.md#anatomy-of-a-scene).
 - Add a `probe()` from the start. Include positions, the current beat and shot, and the beat history.
 - Check `examples/shared/` before building common pieces: captions, title cards, hop walks with a
-  following camera, a morning-to-sunset sky, instant photos, a lo-fi score and paper foley are ready-made
+  following camera, a morning-to-sunset sky, instant photos, a lo-fi score, paper foley and narration timed
+  word by word are ready-made
   there (the `ubc` and `showcase` films use them all; see `AGENTS.md`).
 
 ### 3. Build in passes

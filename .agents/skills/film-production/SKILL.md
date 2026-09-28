@@ -53,6 +53,7 @@ Reach for these before writing the same thing again. Each has TSDoc with an exam
 | `polaroid.ts` | `Polaroid` (an instant photo whose picture is drawn once), `between` / `stackPose` / `albumPose` for its flight, `handCamera`, `flash`. |
 | `lofi.ts` | `lofi(mix, …)`: a warm lo-fi score from sections (keys, bass, half-time beat, tune, crackle), in video time. |
 | `foley.ts` | `foley.*`: normalised paper-world effects (pop, knock, slide, whoosh, tape, tap, stamp, clank, shutter, whirr, chime, birds, gull, surf…). |
+| `narration.ts` | `loadVoice` + `Narration`: a voice track with every word's time; `n.at(block, word)` times what appears on screen, `n.subtitles()` makes the captions. |
 
 ## Planning rules
 
@@ -150,6 +151,7 @@ every sound by `videoTime`, and lay the score out from the chapters' video times
 | `tools/video/shrink.sh`, `mux.sh`, `compare.sh` | A size-capped copy; a new soundtrack under a picture; two videos side by side. |
 | `tools/gpu/wsl-gpu.sh`, `probe.mjs` | The WSL2 GPU environment for headless Chrome, and a check of what Chrome draws with on this machine (CPU, default, `--gpu`). |
 | `tools/audio/analyze.py` | For films timed to a recording: transcript with word timings, tempo, beats and sections. |
+| `tools/voice/narrate.py` | Voice a narration script locally (Kokoro-82M), with word timings for `narration.ts`. |
 
 ## Adding another engine
 

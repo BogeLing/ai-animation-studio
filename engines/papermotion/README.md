@@ -25,6 +25,7 @@ Playwright installed (`~/.cache/ms-playwright`, `~/Library/Caches/ms-playwright`
 | `plane` | 5 s | `examples/plane/`: Clawd throws a paper dart; it loops, stalls, flips around and lands on Clawd's head. Story, camera and a soundtrack synthesized from the simulation's events (`sound.ts`). |
 | `showcase` | 12 s | `examples/showcase/`: every scene module on screen at once. A title card, a hop walk past three pop-up stations (`props.ts`) while the sky runs from morning to sunset, an instant photo at each stop, an album at the end, over a `lofi` score and `foley` (`sound.ts`). |
 | `ubc` | 12 s | `examples/ubc/`: a quick tour of UBC's campus from morning to sunset: the clock tower on Main Mall, the Irving K. Barber Learning Centre, the Museum of Anthropology and Wreck Beach (`places.ts`), with a photo at each stop, an album, captions, a `lofi` score, foley and the clock tower's bells (`sound.ts`). |
+| `tutorial` | 1 min 51 s | `examples/tutorial/`: a narrated quick start for this repository. Clawd walks along a studio wall of boards (`boards.ts`) that fill in on the narrator's words; subtitles follow the voice; the narration is `narration.md`, voiced by `tools/voice/narrate.py` into `public/voice/tutorial.flac` (a synthetic voice, Kokoro-82M). |
 | `hello` | 4 s | The template's starter scene. |
 | `smoke` | 1 s | `examples/smoke/`: a test film. A paper cottage's chimney puffs twice and "OK" drops in, with sound. It fails at once if the bundled Montserrat didn't load. |
 
@@ -43,6 +44,7 @@ The cast the films share, and building blocks for new films. Each has TSDoc with
 | `daySky.ts` | `dayAt(d)`: a day from morning to sunset (sky, sun, sea, hills), `paintSky`, `paintSun`, `tinted`. |
 | `polaroid.ts` | `Polaroid`: an instant photo whose picture is drawn once from the set's own props; poses for its flight to a stack and an album; `handCamera`, `flash`. |
 | `lofi.ts` | `lofi(mix, …)`: a warm lo-fi score from sections: electric-piano chords, bass, a half-time beat, a tune, vinyl crackle. |
+| `narration.ts` | `loadVoice` and `Narration`: a voice track with the time of every word, so pictures, sounds and subtitles follow the narrator (`n.at('block', 'word')`, `n.subtitles()`). Voice the script with `tools/voice/narrate.py`. |
 | `foley.ts` | `foley.*`: normalised paper-world effects: pop, knock, letter, slide, whoosh, swish, tape, tap, click, crumple, stamp, clank, shutter, whirr, chime, birds, gull, surf, pluck. |
 
 ## Commands

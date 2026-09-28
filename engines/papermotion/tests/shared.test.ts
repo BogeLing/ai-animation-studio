@@ -4,6 +4,7 @@ import { DAY, dayAt, mixHex } from '../examples/shared/daySky';
 import { foley } from '../examples/shared/foley';
 import { CueClock } from '../examples/shared/kit';
 import { lofi } from '../examples/shared/lofi';
+import { Narration, type Voice } from '../examples/shared/narration';
 import { HopPath, follow } from '../examples/shared/walk';
 
 const SR = 8000;
@@ -99,5 +100,34 @@ describe('foley', () => {
       expect(peak(b), name).toBeGreaterThan(0.01);
       expect(peak(b), name).toBeLessThanOrEqual(name === "surf" ? 1 : 0.9 + 1e-6);
     }
+  });
+});
+
+describe('Narration', () => {
+  const voice: Voice = {
+    length: 6, rate: 48000, samples: new Float32Array(1),
+    blocks: [{
+      id: 'a', text: 'Hello paper-plane world. Second part here, with more words to split.', start: 0.2, end: 4,
+      words: [['Hello', 0.2, 0.5], ['paper', 0.5, 0.8], ['plane', 0.8, 1.1], ['world', 1.1, 1.5], ['Second', 2, 2.3], ['part', 2.3, 2.5], ['here', 2.5, 2.8],
+        ['with', 2.9, 3], ['more', 3, 3.2], ['words', 3.2, 3.4], ['to', 3.4, 3.5], ['split', 3.5, 3.9]],
+    }],
+  };
+  const n = new Narration(voice, 1);
+
+  it('puts words on the film clock, a hyphenated word at its first token', () => {
+    expect(n.block('a')).toEqual({ start: 1.2, end: 5 });
+    expect(n.at('a', 'paper')).toBeCloseTo(1.5);
+    expect(n.at('a', 'world')).toBeCloseTo(2.1);
+    expect(n.at('a', 'w', 2)).toBeCloseTo(3.9);
+    expect(() => n.at('a', 'nope')).toThrow(/nope/);
+    expect(() => n.block('b')).toThrow(/b/);
+  });
+
+  it('cuts subtitles at punctuation and at the word limit, each timed to its first word', () => {
+    const subs = n.subtitles(4);
+    expect(subs.map(s => s.text)).toEqual(['Hello paper-plane world.', 'Second part here,', 'with more words to', 'split.']);
+    expect(subs[0].from).toBeCloseTo(1.08);
+    expect(subs[0].to).toBeCloseTo(subs[1].from);
+    expect(subs[3].to).toBeCloseTo(5.35);
   });
 });

@@ -12,7 +12,7 @@ the score, rendering, QA and delivery.
 
 Before writing a caption, a title, a walk, a sky, a photo, a score or sound effects from scratch, check
 `examples/shared/`: `captions.ts`, `title.ts`, `walk.ts`, `daySky.ts`, `polaroid.ts`, `lofi.ts`,
-`foley.ts` and `kit.ts` (the `ubc` and `showcase` films use them all). They are scene-level building blocks with a
+`foley.ts`, `narration.ts` and `kit.ts` (the `ubc` and `showcase` films use most of them; `tutorial` shows narration). They are scene-level building blocks with a
 house style, so they live next to the cast rather than in `src/`; generic primitives still belong in
 `src/`.
 
