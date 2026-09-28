@@ -1,7 +1,7 @@
 ---
 name: film-production
 description: End-to-end production workflow for animated short films that an AI agent writes as code in this repo (papermotion paper cut-out today). It covers turning a brief (a story, a script, an audio clip, a CV) into stations and a storyboard, then iterating with small batches of key-frame review images. It also covers side-by-side comparisons for taste decisions, paper captions and titles, logos and colour, and a code-synthesized score and foley from the shared modules. Finally it covers pacing with slow-motion transitions, fast parallel GPU rendering, glitch QA, compression and delivery, and sizing cloud rendering (Lambda, Cloud Run, Modal, Spot). Use when making, revising, re-timing, re-scoring, rendering, checking or delivering a film in this repo, or when asked how to render one faster or in the cloud.
-compatibility: Node 24 with corepack pnpm, ffmpeg, and Google Chrome or Playwright's Chromium (found automatically; CHROMIUM_PATH or CHROME_PATH override it). uv for the Python tools. The GPU path was measured on WSL2 with an NVIDIA card.
+compatibility: Node 24 with corepack pnpm, ffmpeg, and Google Chrome or Playwright's Chromium (found automatically; CHROMIUM_PATH or CHROME_PATH override it). uv for the Python tools. The GPU path was measured on WSL2 with an NVIDIA card and on an Apple M4 Mac (Metal).
 metadata:
   project: ai-animation-studio
   version: "1.0"
@@ -21,7 +21,7 @@ in `.claude/skills/` for Claude Code).
 | `engines/papermotion/` | The engine (`src/`), its scripts (render, parallel/GPU render, grab, listen, smoke), tests, and the films in `examples/`. Work from here; `pnpm` may not be on PATH, so use `corepack pnpm`. |
 | `engines/papermotion/examples/shared/` | The cast (`Clawd`, `PaperPlane`) and the scene modules listed below. |
 | `engines/papermotion/examples/ubc/`, `showcase/` | Two 12 s films that use every scene module: a real campus tour and a made-up world. Read them to see the modules working together. |
-| `tools/` | Engine-independent tools: video (check, glitch scan, contact sheets, shrink, mux, compare), WSL2 GPU setup, audio analysis. |
+| `tools/` | Engine-independent tools: video (check, glitch scan, contact sheets, shrink, mux, compare), WSL2 GPU setup, a GPU probe, audio analysis. |
 
 ## The loop
 
@@ -112,9 +112,13 @@ every sound by `videoTime`, and lay the score out from the chapters' video times
   out with 368 decodable frames). Launch with `corepack pnpm render:detached <name> [options]`: it refuses
   to start if a render is running, and it survives agent restarts, which kill ordinary background tasks.
 - **Pick the path:**
-  - GPU (`--workers 6 --gpu --codec nvenc`; 4 if WSL has under ~8 GB RAM) is ~60 ms/frame, but it can
-    produce a rare one-frame garbage block. More workers stop helping once the GPU's VRAM fills.
-  - CPU (`--workers 8`) is bit-exact and ~5× slower.
+  - GPU: `--gpu` draws through Mesa's d3d12 driver on WSL2 and through Metal on a Mac, and the render prints
+    what Chrome really draws with. It can produce a rare one-frame garbage block.
+    - WSL2 + RTX 3060: `--workers 6 --gpu --codec nvenc` (4 if WSL has under ~8 GB RAM), ~60 ms/frame.
+      More workers stop helping once the GPU's VRAM fills.
+    - Apple M4: `--workers 2 --gpu --codec videotoolbox`, ~70 ms/frame; more workers don't help.
+    - `--codec hw` picks the machine's own hardware encoder (VideoToolbox on a Mac, NVENC elsewhere).
+  - CPU (`--workers 8`) is bit-exact: ~5× slower on the WSL laptop, ~1.5× on the M4.
   - After a GPU render, always run `../../tools/video/check_video.sh out/<name>.mp4 <frames> out/frames/<name>`:
     frame count, decode errors, loudness and a glitch scan.
 - **Deliver:** make a ≤25 MB copy with `../../tools/video/shrink.sh` for chat apps and upload caps, and
@@ -137,14 +141,14 @@ every sound by `videoTime`, and lay the score out from the chapters' video times
 | --- | --- |
 | `pnpm grab <name> <seconds…> [--query=…] [--out=dir] [--probe]` | Key frames (and the stage's probe) at those times, plus a contact sheet. `--query` passes URL params for variants. |
 | `pnpm listen <name>` | The soundtrack alone: cue list in video time, loudness, `out/<name>.wav` and a spectrogram. |
-| `pnpm render:fast <name> --workers 6 --gpu --codec nvenc` | The parallel renderer (CPU without `--gpu`); `--range a:b` for part of a film, `--bench` to time it. |
+| `pnpm render:fast <name> --workers 6 --gpu --codec nvenc` | The parallel renderer (CPU without `--gpu`; `--codec x264\|nvenc\|videotoolbox\|hw`); `--range a:b` for part of a film, `--bench` to time it. |
 | `pnpm render:detached <name> [render:fast options]` | One guarded, detached render; the log is `out/<name>_render.log` and ends with an `EXIT` line. |
 | `pnpm bench <name> <memMB…>` | Emulate cloud worker sizes locally (CPU quota = mem/1769 MB, memory cap, no swap): per-frame time, CPU use, peak memory. |
 | `tools/video/check_video.sh` | Frame count, decode errors, loudness, glitch scan. |
 | `tools/video/glitch_scan.py` | `uv run` it on a frames folder: frames that differ from both neighbours while the neighbours match. |
 | `tools/video/tile.sh` | Labelled comparison sheets, one ffmpeg pass per tile. |
 | `tools/video/shrink.sh`, `mux.sh`, `compare.sh` | A size-capped copy; a new soundtrack under a picture; two videos side by side. |
-| `tools/gpu/wsl-gpu.sh`, `probe.mjs` | The WSL2 GPU environment for headless Chrome, and a check of which renderer it lands on. |
+| `tools/gpu/wsl-gpu.sh`, `probe.mjs` | The WSL2 GPU environment for headless Chrome, and a check of what Chrome draws with on this machine (CPU, default, `--gpu`). |
 | `tools/audio/analyze.py` | For films timed to a recording: transcript with word timings, tempo, beats and sections. |
 
 ## Adding another engine

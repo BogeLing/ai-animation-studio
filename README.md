@@ -25,15 +25,16 @@ All three films were written by Claude (Opus 5.5) in Claude Code, using the skil
 ## Quick start
 
 You need Node 24, ffmpeg, and Google Chrome or Chromium (or run `npx playwright-core install chromium`).
-[uv](https://docs.astral.sh/uv/) runs the Python tools. A GPU is optional: the fast path was measured on
-WSL2 with an NVIDIA card.
+[uv](https://docs.astral.sh/uv/) runs the Python tools. A GPU is optional: `--gpu` draws through Mesa's d3d12
+driver on WSL2 (measured with an NVIDIA card) and through Metal on a Mac (measured on an M4).
 
 ```bash
 git clone https://github.com/BogeLing/ai-animation-studio && cd ai-animation-studio/engines/papermotion
 corepack enable && pnpm install
 pnpm smoke                   # a 1 s test film, rendered two ways and checked (about 20 s)
 pnpm render plane            # → out/plane.mp4, with sound
-pnpm render:fast showcase --workers 6 --gpu --codec nvenc   # parallel, on the GPU
+pnpm render:fast showcase --workers 6 --gpu --codec nvenc          # parallel, on the GPU (WSL2 + NVIDIA)
+pnpm render:fast showcase --workers 2 --gpu --codec videotoolbox   # the same on a Mac (Metal)
 ```
 
 Then start Claude Code or Codex in `engines/papermotion/` and ask for a film, for example:
@@ -51,7 +52,7 @@ same files in `.claude/skills/` for Claude Code.
 | --- | --- |
 | [`.agents/skills/film-production/`](.agents/skills/film-production/) | The production workflow as an agent skill (copied to `.claude/skills/` for Claude Code): brief → storyboard → key-frame review → taste decisions side by side → captions, logos and colour → pacing → sound → render → QA → delivery, plus measured cloud-rendering sizing. It doesn't depend on the engine. |
 | [`engines/papermotion/`](engines/papermotion/) | The [papermotion](https://github.com/francozanardi/papermotion) paper cut-out engine with its own agent skill, a parallel/GPU renderer, reusable scene modules and the films. |
-| [`tools/`](tools/) | Engine-independent tools: a pre-delivery video check and a one-frame glitch scan, labelled contact sheets, shrink/mux/compare, WSL2 GPU setup and a probe, and audio analysis for films timed to a recording. |
+| [`tools/`](tools/) | Engine-independent tools: a pre-delivery video check and a one-frame glitch scan, labelled contact sheets, shrink/mux/compare, WSL2 GPU setup and a probe of what Chrome draws with, and audio analysis for films timed to a recording. |
 | [`media/`](media/) | The previews above. |
 
 ## Scene modules
@@ -82,10 +83,24 @@ Measured on a laptop with an RTX 3060 (6 GB) under WSL2 with 12 GB of RAM, at 19
 | a 50 s film, 1498 frames | 6 GPU workers | about 90 s (60 ms a frame) |
 | any film | one CPU page | 1.2–1.4 s a frame |
 
-More GPU workers stop helping once the card's memory fills (each takes about 0.4 GB). GPU frames aren't
-bit-exact and, rarely, one comes out with a garbage block, so always run `tools/video/check_video.sh` on a
-GPU render; CPU renders are bit-exact. [`cloud.md`](.agents/skills/film-production/references/cloud.md) has
-measured numbers for rendering on Lambda, Cloud Run and Modal.
+More GPU workers stop helping once the card's memory fills (each takes about 0.4 GB).
+
+On a MacBook Air with an Apple M4 (10-core GPU, 24 GB), where `--gpu` draws through Metal:
+
+| Film | Setup | Time |
+| --- | --- | --- |
+| `smoke`, 30 frames | `pnpm smoke` | about 12 s |
+| `showcase`, 360 frames | `render:fast --workers 2 --gpu --codec videotoolbox` | 29 s (24 s drawing) |
+| `showcase`, 360 frames | `render:fast --workers 8` (CPU, x264) | 54 s (36 s drawing) |
+| `showcase` | one CPU page | about 0.4 s a frame |
+
+Two Metal workers are the sweet spot there (one: 99 ms a frame; two: 70; four: 73; six: 78). Chrome on macOS
+draws on the GPU even without `--gpu`, so the CPU path passes `--disable-gpu`.
+
+GPU frames aren't bit-exact and, rarely, one comes out with a garbage block, so always run
+`tools/video/check_video.sh` on a GPU render; CPU renders are bit-exact.
+[`cloud.md`](.agents/skills/film-production/references/cloud.md) has measured numbers for rendering on Lambda,
+Cloud Run and Modal.
 
 ## Engines
 

@@ -9,12 +9,14 @@ renderer, reusable scene modules, and the films.
 corepack enable && pnpm install
 pnpm smoke                                         # 1 s test film: checks the whole pipeline in about 30 s
 pnpm render plane                                  # → out/plane.mp4, sound included
-pnpm render:fast showcase --workers 6 --gpu --codec nvenc
+pnpm render:fast showcase --workers 6 --gpu --codec nvenc          # WSL2 + NVIDIA
+pnpm render:fast showcase --workers 2 --gpu --codec videotoolbox   # a Mac (Metal)
 ```
 
 You also need ffmpeg and Chrome or Chromium. The scripts find Google Chrome, or else a Chromium that
-Playwright installed (`~/.cache/ms-playwright` or `PLAYWRIGHT_BROWSERS_PATH`). Set `CHROMIUM_PATH` to use
-another one, or run `npx playwright-core install chromium` if you have none.
+Playwright installed (`~/.cache/ms-playwright`, `~/Library/Caches/ms-playwright` on macOS, or
+`PLAYWRIGHT_BROWSERS_PATH`). Set `CHROMIUM_PATH` to use another one, or run
+`npx playwright-core install chromium` if you have none.
 
 ## Films
 
@@ -69,8 +71,8 @@ if anything did.
 | Option | What it does |
 | --- | --- |
 | `--workers N` | Number of workers, each in its own browser (default 4). Frames are dealt out in turn so heavy stretches are shared. |
-| `--gpu` | Draw on the GPU. On WSL2 this goes through Mesa's d3d12 driver; see `../../tools/gpu/`. |
-| `--codec nvenc` | Encode with NVIDIA NVENC instead of x264. |
+| `--gpu` | Draw on the GPU: through Metal on macOS, through Mesa's d3d12 driver on WSL2 (see `../../tools/gpu/`). Without it frames are drawn on the CPU, which is bit-exact. The render prints what Chrome really draws with, and warns when it isn't what was asked for. |
+| `--codec x264\|nvenc\|videotoolbox\|hw` | The encoder: x264 (default), NVIDIA NVENC, Apple VideoToolbox, or `hw` for this machine's own (VideoToolbox on macOS, NVENC elsewhere, x264 if it can't run). A hardware encoder is tried on a few frames before the drawing starts. |
 | `--range a:b` | Only frames a…b−1 (a partial range gets no sound). |
 | `--bench` | Draw and time the frames without writing or encoding anything. |
 | `--shared` | All workers in one browser. Usually slower; kept for comparison. |
@@ -81,16 +83,25 @@ overall, against 1.2–1.4 s for one CPU page. More workers stop helping once th
 frames aren't bit-exact (and can, rarely, show a one-frame glitch: scan with `../../tools/video/check_video.sh`);
 CPU workers are.
 
+On a MacBook Air with an Apple M4 (24 GB), 2 Metal workers draw a 1080p frame in about 70 ms overall, and
+`--codec videotoolbox` encodes `showcase` in 2 s where x264 takes 13 s. More Metal workers don't help (4: 73 ms,
+6: 78 ms). Its CPU also beats the laptop's: about 0.4 s a frame for one page, ~100 ms overall with 8 workers.
+
 ## Changes to the template
 
 - `src/stage/player.ts`: a `seek(n)` hook that simulates up to frame `n` without drawing it, so a worker
   can start anywhere in the film. The rest of `src/` is upstream's engine as published.
 - `scripts/render-parallel.ts`: the parallel/GPU renderer. It muxes a scene's soundtrack like
-  `pnpm render` does. `scripts/render-detached.sh`, `bench-cgroup.sh` and `bench-page.ts` wrap it.
+  `pnpm render` does. `scripts/render-detached.sh` (which does without `setsid` on macOS), `bench-cgroup.sh`
+  and `bench-page.ts` wrap it.
+- `scripts/platform.ts`: what `--gpu` and `--codec` mean on each platform (Metal and VideoToolbox on macOS;
+  Mesa d3d12 and NVENC on WSL2), shared by every script that launches Chrome or encodes. CPU drawing passes
+  `--disable-gpu`, since Chrome on macOS otherwise draws on the GPU even headless, and the videos are
+  encoded with `-color_range tv`, since ffmpeg 8 would keep the frames' full range.
 - `scripts/grab.ts`: `--query` and `--out`. `scripts/browser.ts`: `findChromium` also looks in
-  `PLAYWRIGHT_BROWSERS_PATH`, in Playwright's older `chrome-linux` folders and at the usual Google Chrome and
-  Chromium paths, and accepts `CHROME_PATH`; `load` fails as soon as the page throws, with the page's message,
-  and takes URL parameters.
+  `PLAYWRIGHT_BROWSERS_PATH`, in Playwright's older `chrome-linux` folders, where this playwright-core puts its
+  own build (on macOS too) and at the usual Google Chrome and Chromium paths, and accepts `CHROME_PATH`; `load`
+  fails as soon as the page throws, with the page's message, and takes URL parameters.
 - `examples/`: the films above, the shared cast and the scene modules; `tests/shared.test.ts` covers the
   modules that don't need a canvas.
 - `index.html` and `public/fonts/`: Montserrat is bundled instead of loaded from Google Fonts, so rendering

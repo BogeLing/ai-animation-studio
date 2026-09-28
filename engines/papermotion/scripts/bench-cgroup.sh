@@ -5,6 +5,7 @@
 set -euo pipefail
 [ $# -ge 2 ] || { echo "usage: $0 <example> <memMB...>"; exit 1; }
 [ -f scripts/render-parallel.ts ] || { echo "run from the engines/papermotion/ folder"; exit 1; }
+command -v systemd-run >/dev/null || { echo "needs systemd-run (Linux): the limits are systemd cgroups"; exit 1; }
 here=$(cd "$(dirname "$0")" && pwd); name=$1; shift
 for mem in "$@"; do
   quota=$(( (mem * 100 + 884) / 1769 ))

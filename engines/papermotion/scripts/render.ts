@@ -10,23 +10,16 @@
  *
  * Needs ffmpeg and Chrome or Chromium (see findChromium in browser.ts, or set CHROMIUM_PATH).
  */
-import { execFileSync, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from 'playwright-core';
 import { EXAMPLES } from '../examples/catalog.ts';
 import { inspect, loudness, mux, pullAudio } from './audio.ts';
 import { load, open } from './browser.ts';
+import { PIXELS, encoder } from './platform.ts';
 
 const OUT = 'out';
-
-/** H.264 settings for the best encoder this ffmpeg has. */
-function encoder(): string[] {
-  const list = execFileSync('ffmpeg', ['-hide_banner', '-encoders'], { encoding: 'utf8' });
-  if (list.includes('libx264')) return ['-c:v', 'libx264', '-crf', '17', '-preset', 'slow'];
-  if (list.includes('libopenh264')) return ['-c:v', 'libopenh264', '-b:v', '18M'];
-  throw new Error('ffmpeg has no H.264 encoder (libx264 or libopenh264).');
-}
 
 async function render(page: Page, base: string, name: string, codec: string[]): Promise<void> {
   const errors: string[] = [];
@@ -34,7 +27,7 @@ async function render(page: Page, base: string, name: string, codec: string[]): 
 
   const file = join(OUT, `${name}.mp4`);
   const ffmpeg = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(fps), '-i', '-',
-    ...codec, '-g', String(fps), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', file], { stdio: ['pipe', 'inherit', 'inherit'] });
+    ...codec, '-g', String(fps), ...PIXELS, '-movflags', '+faststart', file], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise<number | null>(resolve => ffmpeg.on('close', resolve));
 
   const t0 = Date.now();
@@ -61,7 +54,7 @@ const unknown = names.filter(n => !EXAMPLES[n]);
 if (unknown.length) throw new Error(`Unknown example(s): ${unknown.join(', ')}. Try: ${Object.keys(EXAMPLES).join(', ')}, all`);
 
 mkdirSync(OUT, { recursive: true });
-const codec = encoder();
+const codec = encoder().args;
 const session = await open();
 try {
   for (const name of names) await render(session.page, session.base, name, codec);

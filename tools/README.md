@@ -19,7 +19,7 @@ installs them into a throwaway environment. The transcription model downloads on
 | Script | Use |
 | --- | --- |
 | `wsl-gpu.sh` | `source tools/gpu/wsl-gpu.sh`. Sets the environment headless Chrome needs to draw on the Windows GPU from WSL2: `LD_LIBRARY_PATH=/usr/lib/wsl/lib`, `GALLIUM_DRIVER=d3d12` and `MESA_D3D12_DEFAULT_ADAPTER_NAME`. It also sets `EXTRA_CHROME_FLAGS` for the brush kit. |
-| `probe.mjs` | `node tools/gpu/probe.mjs [chrome]` (needs `pnpm install` in `engines/papermotion/`; without a path it uses the Chromium the papermotion scripts find). Prints which renderer Chrome's WebGL lands on for the default, ANGLE-EGL and ANGLE-EGL+d3d12 setups, with a synthetic Canvas 2D timing. The GPU should show as `D3D12 (<your GPU>)`, and llvmpipe or SwiftShader means software. Benchmark real scenes too: the synthetic test can point the wrong way. |
+| `probe.mjs` | `node tools/gpu/probe.mjs [chrome]` (needs `pnpm install` in `engines/papermotion/`; without a path it uses the Chromium the papermotion scripts find). For the CPU path, Chrome's default and this machine's `--gpu` setup (on WSL2 also the GPU flags without the d3d12 environment), prints whether 2D canvases are drawn on the GPU, the GL renderer, and a synthetic Canvas 2D timing. The GPU should show as `D3D12 (<your GPU>)` on WSL2 and as ANGLE's Metal renderer on a Mac; llvmpipe or SwiftShader means software. Benchmark real scenes too: the synthetic test can point the wrong way. |
 
 ## video/
 

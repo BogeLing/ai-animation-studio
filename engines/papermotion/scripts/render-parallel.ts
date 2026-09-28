@@ -3,9 +3,10 @@
  * each page fast-forwards its simulation to the start of its chunk (`seek`, no drawing) and draws only
  * its own frames. The simulation is deterministic, so the chunks join seamlessly.
  *
- *   node scripts/render-parallel.ts <example> [--workers 4] [--range from:to] [--gpu] [--codec x264|nvenc] [--out file] [--bench]
+ *   node scripts/render-parallel.ts <example> [--workers 4] [--range from:to] [--gpu] [--codec x264|nvenc|videotoolbox|hw] [--out file] [--bench]
  *
- * --gpu     draw on the GPU (WSL2: ANGLE on EGL, through Mesa's D3D12 driver)
+ * --gpu     draw on the GPU (macOS: ANGLE on Metal; WSL2: ANGLE on EGL, through Mesa's D3D12 driver; see platform.ts)
+ * --codec   x264 (default), nvenc, videotoolbox, or hw: this machine's hardware encoder (VideoToolbox on macOS, else NVENC)
  * --shared  all workers in one browser (default: a browser each, so they don't share a GPU process)
  * --bench   draw and time the frames, but write and encode nothing
  * A scene with a soundtrack gets it mixed and muxed in when the whole film is rendered (as `pnpm render` does).
@@ -13,11 +14,11 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 import { EXAMPLES } from '../examples/catalog.ts';
 import { inspect, loudness, mux, pullAudio } from './audio.ts';
-import { findChromium, load } from './browser.ts';
+import { canvasBackend, launch, load } from './browser.ts';
+import { PIXELS, encoder } from './platform.ts';
 
 type Hooks = { frame(i: number): string; seek(i: number): void };
 
@@ -25,21 +26,17 @@ const args = process.argv.slice(2);
 const opt = (key: string, fallback: string): string => { const i = args.indexOf(`--${key}`); return i >= 0 ? args[i + 1] : fallback; };
 const name = args[0];
 if (!name || !EXAMPLES[name]) {
-  console.error(`usage: node scripts/render-parallel.ts <example> [--workers N] [--range a:b] [--gpu] [--codec x264|nvenc] [--out file] [--bench]\nexamples: ${Object.keys(EXAMPLES).join(', ')}`);
+  console.error(`usage: node scripts/render-parallel.ts <example> [--workers N] [--range a:b] [--gpu] [--codec x264|nvenc|videotoolbox|hw] [--out file] [--bench]\nexamples: ${Object.keys(EXAMPLES).join(', ')}`);
   process.exit(1);
 }
 const workers = Math.max(1, Number(opt('workers', '4'))), gpu = args.includes('--gpu'), bench = args.includes('--bench'), shared = args.includes('--shared');
-const codec = opt('codec', 'x264') === 'nvenc' ? ['-c:v', 'h264_nvenc', '-preset', 'p6', '-tune', 'hq', '-rc', 'vbr', '-cq', '18', '-b:v', '0'] : ['-c:v', 'libx264', '-crf', '17', '-preset', 'slow'];
+// Checked now, so an encoder this machine can't run fails before the drawing rather than after it.
+const codec = bench ? null : encoder(opt('codec', 'x264'));
 
 const server = await createServer({ server: { port: 0, hmr: false, watch: null }, logLevel: 'error' });
 await server.listen();
 const base = server.resolvedUrls!.local[0].replace(/\/$/, '');
-const launch = () => chromium.launch({
-  executablePath: findChromium(),
-  args: gpu ? ['--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-gl=angle', '--use-angle=gl-egl'] : [],
-  env: gpu ? { ...process.env, LD_LIBRARY_PATH: '/usr/lib/wsl/lib', GALLIUM_DRIVER: 'd3d12', MESA_D3D12_DEFAULT_ADAPTER_NAME: 'NVIDIA' } : process.env,
-});
-const browsers = await Promise.all(Array.from({ length: shared ? 1 : workers }, launch));
+const browsers = await Promise.all(Array.from({ length: shared ? 1 : workers }, () => launch(gpu ? 'gpu' : 'cpu')));
 
 try {
   // A context (and renderer process) per worker; by default a browser per worker too.
@@ -49,6 +46,12 @@ try {
     return { page, errors, meta: await load(page, base, name, errors) };
   }));
   const { fps, frames } = pages[0].meta;
+  // Chrome falls back to software without a word when it can't use the GPU, so say what it really draws with.
+  const drawing = await canvasBackend(browsers[0]);
+  if (drawing) {
+    console.log(`${name}: drawing on the ${drawing.gpu ? `GPU (${drawing.renderer})` : 'CPU'}${codec ? `, encoding with ${codec.name}` : ''}`);
+    if (drawing.gpu !== gpu) console.warn(`warning: asked for the ${gpu ? 'GPU' : 'CPU'} but Chrome draws on the ${drawing.gpu ? 'GPU' : 'CPU'} (2D canvas: ${drawing.status}); see ../../tools/gpu/probe.mjs`);
+  }
   const [from, to] = opt('range', `0:${frames}`).split(':').map(Number);
   const total = Math.min(to, frames) - from;
   const dir = join('out', 'frames', name);
@@ -72,10 +75,10 @@ try {
   const secs = (Date.now() - t0) / 1000;
   console.log(`${name}: ${total} frames, ${workers} worker(s)${gpu ? ', GPU' : ''}: ${secs.toFixed(1)}s → ${((secs * 1000) / total).toFixed(0)} ms/frame overall`);
 
-  if (!bench) {
+  if (codec) {
     const out = opt('out', join('out', `${name}.mp4`)), e0 = Date.now();
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-framerate', String(fps), '-start_number', String(from), '-i', join(dir, 'f%05d.jpg'),
-      ...codec, '-g', String(fps), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out], { stdio: 'inherit' });
+      ...codec.args, '-g', String(fps), ...PIXELS, '-movflags', '+faststart', out], { stdio: 'inherit' });
     console.log(`encoded → ${out} (${((Date.now() - e0) / 1000).toFixed(1)}s)`);
     // Sound comes from the simulation's cue log, which every worker has once it has reached the end.
     if (from === 0 && total === frames) {
