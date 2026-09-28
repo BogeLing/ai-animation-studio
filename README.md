@@ -85,7 +85,8 @@ places paper faces, pop-up cards and 2D rigs in the world, `shot` describes a ca
 (size, bearing, elevation, where the subject sits), and `CameraPath` moves through shots. Before rendering, the
 agent scouts: `pnpm scout` draws a moment from several shot setups side by side with numbers that judge each
 (how much of the subject is seen, its size, clutter near the lens), then checks the whole camera move frame by
-frame. The `diorama` film (8 s, a paper village) was made this way.
+frame. The `diorama` film (8 s, a paper village) was made this way; `diorama_three` is the same film drawn by a
+second renderer on three.js, with true occlusion and the sun's shadows on every surface.
 
 Any 2D film here can also be re-shot in 2.5D: `DepthCamera` films its parallax layers as sheets standing at real
 distances and swings the lens round the action, so near layers slide across far ones. `plane25d` and `ubc25d` are the

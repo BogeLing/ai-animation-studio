@@ -66,7 +66,7 @@ export * from './core/math3';
 export { Camera3D, type View3, type Projected } from './camera/Camera3D';
 export { shot, focalFor, SHOT_SIZES, type ShotSize, type ShotSetup, type Subject } from './camera/shot';
 export { CameraPath, motionBetween, type PathKey, type CameraMotion } from './camera/CameraPath';
-export { Diorama, type Face, type Piece, type Actor, type DioramaOpts, type ShotNumbers } from './diorama/Diorama';
+export { Diorama, type Face, type Piece, type Actor, type DioramaOpts, type ShotNumbers, type SetRenderer } from './diorama/Diorama';
 export { panel, groundPoly, prism, billboard } from './diorama/solids';
 
 // Direction: choreography and time-shaped intents

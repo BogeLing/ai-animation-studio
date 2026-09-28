@@ -26,6 +26,7 @@ Playwright installed (`~/.cache/ms-playwright`, `~/Library/Caches/ms-playwright`
 | `showcase` | 12 s | `examples/showcase/`: every scene module on screen at once. A title card, a hop walk past three pop-up stations (`props.ts`) while the sky runs from morning to sunset, an instant photo at each stop, an album at the end, over a `lofi` score and `foley` (`sound.ts`). |
 | `ubc` | 12 s | `examples/ubc/`: a quick tour of UBC's campus from morning to sunset: the clock tower on Main Mall, the Irving K. Barber Learning Centre, the Museum of Anthropology and Wreck Beach (`places.ts`), with a photo at each stop, an album, captions, a `lofi` score, foley and the clock tower's bells (`sound.ts`). |
 | `diorama` | 8 s | `examples/diorama/`: a paper village built in 3D (`village.ts`). Pop-up trees fold up, Clawd hops out of its front door and down the road, and the camera cranes down from a wide shot to a full shot; the move was chosen with `pnpm scout`. A `lofi` score and foley (`sound.ts`). |
+| `diorama_three` | 8 s | The same film drawn by the second renderer, `DioramaGL` on three.js (WebGL2 on the GPU): the same set with true occlusion and the sun's shadows on every surface. |
 | `plane25d`, `ubc25d` | 5 s, 12 s | The same two films shot in 2.5D: a `DepthCamera` films their layers as sheets at real distances and swings round the action (`plane/depth.ts`, `ubc/depth.ts`). Nothing else changes: story, sound and render speed are the originals'. |
 | `tutorial` | 1 min 51 s | `examples/tutorial/`: a narrated quick start for this repository. Clawd walks along a studio wall of boards (`boards.ts`) that fill in on the narrator's words; subtitles follow the voice; the narration is `narration.md`, voiced by `tools/voice/narrate.py` into `public/voice/tutorial.flac` (a synthetic voice, Kokoro-82M). |
 | `hello` | 4 s | The template's starter scene. |
@@ -55,7 +56,8 @@ A set can also be built in 3D and filmed through a perspective camera, still as 
 `src/diorama/`). `Diorama` places paper faces, cards and 2D rigs in the world and draws them back to front with
 `Paper`, lit by the sun, faded into the air and casting shadows on the ground. `shot` places a `Camera3D` the way
 a director describes a shot (size, bearing, elevation, where the subject sits), and `CameraPath` moves through
-shots. `DepthCamera` gives an existing 2D film a 2.5D cut: it films the film's parallax layers as sheets at real
+shots. `DioramaGL` (`src/three`, three.js) is a second renderer for the same sets, on the GPU with true occlusion and
+shadows on every surface. `DepthCamera` gives an existing 2D film a 2.5D cut: it films the film's parallax layers as sheets at real
 distances through a perspective lens and swings round the action. `pnpm scout` draws one moment from several shot setups side by side with numbers that judge each (how
 much of the subject is seen, its size, clutter near the lens), and checks a whole camera move frame by frame.
 On an Apple M4 the `diorama` film's 240 frames draw in under 5 s on the GPU with 2 workers, and scouting nine
@@ -114,7 +116,8 @@ On a MacBook Air with an Apple M4 (24 GB), 2 Metal workers draw a 1080p frame in
 - `src/camera/Camera.ts`: `y` is public, for `DepthCamera`. New in `src/`: `core/math3.ts`, `camera/Camera3D.ts`,
   `camera/shot.ts`, `camera/CameraPath.ts`, `camera/DepthCamera.ts` (with `tests/depthcamera.test.ts`) and `diorama/`
   (sets in 3D drawn with `Paper`), exported from `src/index.ts`, with `tests/camera3d.test.ts` and
-  `tests/diorama.test.ts`. The rest of `src/` is upstream's engine as published.
+  `tests/diorama.test.ts`. `src/three/`: `DioramaGL`, a three.js renderer for dioramas, its own entry point (`three`
+  is the only runtime dependency), with `tests/three.test.ts`. The rest of `src/` is upstream's engine as published.
 - `scripts/scout.ts` (`pnpm scout`): shot scouting, on the GPU unless `--cpu`.
 - `scripts/render-parallel.ts`: the parallel/GPU renderer. It muxes a scene's soundtrack like
   `pnpm render` does. `scripts/render-detached.sh` (which does without `setsid` on macOS), `bench-cgroup.sh`

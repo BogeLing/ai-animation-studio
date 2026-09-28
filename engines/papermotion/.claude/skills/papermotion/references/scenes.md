@@ -161,6 +161,9 @@ export class Scene extends Stage {
   Let a hop's lift come from the rig (`clawd.hop`), so its contact shadow stays on the ground.
 - **Pop-ups:** rebuild a `panel`'s faces each step with a `tilt` from −π/2 (flat) to 0 (standing), eased with
   `overshoot`.
+- **Two renderers.** `set.draw(paper, cam)` paints the set on the 2D canvas; a `DioramaGL` (`src/three`) draws the
+  same set on the GPU with true occlusion and shadows on every surface. Take a renderer maker in the constructor
+  (`diorama` and `diorama_three` are one scene) and draw with `renderer?.draw(set, cam, paper) ?? set.draw(paper, cam)`.
 
 ## Motion design
 

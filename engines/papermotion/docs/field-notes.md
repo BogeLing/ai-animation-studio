@@ -404,3 +404,18 @@ Clawd, a snowball that grows until it escapes down a hill, and a tree that drops
 - **Screen-space paint doesn't move.** Craning 1° lifted the hills 75 px over the plane film's painted horizon, so
   both cuts only orbit. UBC's sun now hangs in `cam.layer(paper, 0, …)`: exact screen space for `Camera` (the
   original's frames hash the same before and after) and at infinity for `DepthCamera`.
+
+## 18. A second renderer on three.js (`diorama_three`)
+
+- **Same data, other painter.** `DioramaGL` draws a `Diorama`'s faces, floor and actors with three.js, so the paper
+  village renders on the GPU with a depth buffer and shadow maps. With colour management off in three.js, and the
+  grain overlaid in the shader as `Paper` overlays it, the two renders match in colour and grain.
+- **Coplanar cards fight.** A tree's trunk and crown lie in one plane: the GPU flickered between them, and the trunk's
+  cut edge showed through the crown. Each face now lifts 3 mm toward the side it faces, by its place in its piece,
+  with a front and a back mesh, so later faces lie over earlier ones from either side, as the 2D painter lays them.
+- **Read sizes after the stage exists.** `new DioramaGL(canvas.width, …)` evaluated before the stage's constructor
+  saw the browser's default 300 × 150 canvas; scenes take a renderer maker `(width, height) => …` instead.
+- **Give actors room on their card.** At 70 % of a square card, Clawd's arms were cut off; at 45 % arms and hops fit.
+- **Speed is not the point.** On the M4, three.js draws the village in 27 ms a frame to the painter's 30 ms (one
+  worker, JPEG capture included); what it adds is occlusion and shadows the painter can't do.
+

@@ -1,5 +1,5 @@
 import {
-  Camera3D, CameraPath, type Diorama, Stage, type Stereo, type Subject, type V3, type View3, add3, billboard, circlePoly, grain, shot, smoothstep,
+  Camera3D, CameraPath, type Diorama, type SetRenderer, Stage, type Stereo, type Subject, type V3, type View3, add3, billboard, circlePoly, grain, shot, smoothstep,
   vignette, wash,
 } from '../../src';
 import { Captions } from '../shared/captions';
@@ -45,6 +45,8 @@ const CAPTIONS = new Captions([
  * "Diorama": a paper village built in 3D with `Diorama`, filmed through a `Camera3D` on a `CameraPath` that was
  * chosen by scouting shots. Pop-up trees fold up as the film opens, Clawd hops out of its front door and down the
  * road toward the camera, and the camera cranes down from a wide shot to a full shot as Clawd stops and smiles.
+ * `renderer` makes something else to draw the set with, e.g. `DioramaGL` on three.js (`diorama_three`); the Canvas 2D
+ * painter draws it otherwise.
  */
 export class DioramaScene extends Stage {
   private readonly set: Diorama;
@@ -55,8 +57,11 @@ export class DioramaScene extends Stage {
   private readonly moments = new CueClock();
   private readonly spot: V3 = { x: 0, y: 0, z: 0 };
 
-  constructor(canvas: HTMLCanvasElement) {
+  private readonly renderer: SetRenderer | null;
+
+  constructor(canvas: HTMLCanvasElement, renderer?: (width: number, height: number) => SetRenderer) {
     super(canvas, { duration: LENGTH, preroll: 0.4 });
+    this.renderer = renderer?.(this.width, this.height) ?? null;
     ({ set: this.set, popups: this.popups } = village());
     this.set.actors.push({ at: this.spot, height: CLAWD_H, art: CLAWD_ART, draw: (paper, scale) => { this.clawd.lens = Math.min(2.4, 1 / Math.max(0.2, scale) ** 0.55); this.clawd.draw(paper); } });
   }
@@ -108,7 +113,8 @@ export class DioramaScene extends Stage {
     ctx.fillRect(0, 0, W, H);
     const sun = cam.direction(this.set.light);
     if (sun) paper.piece(circlePoly(sun, 64, 24), '#fff1c9', { seed: 3, tear: 1.5, shadow: 0, texture: 0.2 });
-    this.set.draw(paper, cam);
+    if (this.renderer) this.renderer.draw(this.set, cam, paper);
+    else this.set.draw(paper, cam);
     if (!this.scouting) CAPTIONS.draw(paper, t);
     vignette(ctx, [40, 28, 20], 0.2);
     grain(ctx, frame, 0.04);

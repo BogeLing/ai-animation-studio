@@ -243,6 +243,12 @@ z toward the viewer of an unturned camera; units are whatever the set uses (the 
   - **Limits:** pieces sort as wholes (the painter's algorithm), so keep them apart; pieces that pass through
     each other can sort wrongly. Shadows fall only on the ground plane. Actors always face the camera, so
     shots from behind them don't work.
+- `DioramaGL(width, height, { shadowMap?, grain?, tear?, grainSize? })` from `src/three` (a separate entry point, so
+  scenes without it never load three.js): a second renderer for the same `Diorama`, on the GPU (WebGL2). Faces keep
+  their torn edges (cut into the geometry), grain and cut edge; a depth buffer settles what is in front at every
+  pixel, so pieces may pass through each other, and the sun casts real shadows onto every surface, actors' too.
+  `.draw(set, cam, paper)` composites over the 2D canvas (draw the sky first); `.info` names what drew it (a GPU, or
+  SwiftShader on the CPU, about 4× slower). Scenes take it as a `SetRenderer` maker: `(width, height) => new DioramaGL(width, height)`.
 
 ## audio
 

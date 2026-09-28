@@ -28,6 +28,10 @@ export const EXAMPLES: Record<string, () => Promise<MakeStage>> = {
     const { DioramaScene } = await import('./diorama/main');
     return canvas => new DioramaScene(canvas);
   },
+  diorama_three: async () => {
+    const [{ DioramaScene }, { DioramaGL }] = await Promise.all([import('./diorama/main'), import('../src/three')]);
+    return canvas => new DioramaScene(canvas, (w, h) => new DioramaGL(w, h));
+  },
   plane25d: async () => {
     const { PlaneScene } = await import('./plane/main'), { depthCamera } = await import('./plane/depth');
     return canvas => new PlaneScene(canvas, { camera: depthCamera });

@@ -42,6 +42,9 @@ export interface DioramaOpts {
   shade?: [number, number];
 }
 
+/** Draws a set instead of its own Canvas 2D painter, e.g. `DioramaGL` (three.js, from `src/three`). */
+export interface SetRenderer { draw(set: Diorama, cam: Camera3D, paper: Paper): void }
+
 /** What a scouted view shows of a subject (see `Diorama.judge`). */
 export interface ShotNumbers {
   /** Share of the subject's sample points no piece hides. */
