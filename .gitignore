@@ -1,0 +1,11 @@
+node_modules/
+out/
+dist/
+*.mp4
+*.webm
+*.wav
+*.m4a
+__pycache__/
+.venv/
+*.analysis.json
+.DS_Store
