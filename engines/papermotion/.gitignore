@@ -4,3 +4,4 @@ out
 *.mp4
 *.webm
 packages/create-papermotion/template
+examples/local

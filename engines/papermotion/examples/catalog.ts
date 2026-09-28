@@ -7,7 +7,7 @@ export type MakeStage = (canvas: HTMLCanvasElement, params: URLSearchParams) => 
  * Every scene in this project, by name. Scenes load lazily, so this list can be read anywhere
  * (the player, the render scripts) without pulling in the scenes themselves. Register new ones here.
  */
-export const EXAMPLES: Record<string, () => Promise<MakeStage>> = {
+const HERE: Record<string, () => Promise<MakeStage>> = {
   hello: async () => {
     const { HelloScene } = await import('./hello/main');
     return canvas => new HelloScene(canvas);
@@ -51,3 +51,13 @@ export const EXAMPLES: Record<string, () => Promise<MakeStage>> = {
     return canvas => new UbcScene(canvas);
   },
 };
+
+/**
+ * Films kept out of this public repository (client work, personal films) go in `examples/local/`, which git
+ * ignores: usually a link to a folder of a private repository (`ln -s ~/private-repo/films examples/local`). If it
+ * holds a `catalog.ts` exporting `EXAMPLES`, those films are listed with these, for the player and every script.
+ */
+const LOCAL_CATALOG = './local/catalog.ts';
+const LOCAL: Record<string, () => Promise<MakeStage>> = await import(/* @vite-ignore */ LOCAL_CATALOG).then(m => m.EXAMPLES ?? {}, () => ({}));
+
+export const EXAMPLES: Record<string, () => Promise<MakeStage>> = { ...HERE, ...LOCAL };
