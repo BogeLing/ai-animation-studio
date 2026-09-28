@@ -1,4 +1,5 @@
 import { Mixer, type SoundLog, type Stereo, voice as synth } from '../../src';
+import type { Screen } from '../shared/screen';
 import { foley } from '../shared/foley';
 import { lofi } from '../shared/lofi';
 import type { Voice } from '../shared/narration';
@@ -10,6 +11,11 @@ export interface Scored {
   videoTime(t: number): number;
   readonly voice: Voice;
   readonly voiceAt: number;
+  /** Seconds the film runs on after the narration (the last chord rings through them). */
+  readonly tail: number;
+  /** A film-first opening: the film on the paper TV, and when the score comes in (the camera's pull-back). */
+  readonly screen?: Screen;
+  readonly musicAt: number;
 }
 
 /** Linear resampling, for a mix at another rate than the voice was decoded at. */
@@ -35,7 +41,17 @@ export function soundtrack(s: Scored, sr: number): Stereo {
     .bus('music', { gain: 0.14, reverb: 0.25 });
 
   mix.add('voice', V(s.voiceAt), resample(s.voice.samples, s.voice.rate, sr), { gain: 1 });
-  lofi(mix, len, sr, { intro: [[0.1, 'Dmaj9']], sections: [{ from: 1.0, to: len - 3.4, drums: 0.35 }], outro: { at: len - 3.2, chord: 'Dmaj9' }, crackle: 0.035 });
+  const m = s.musicAt;
+  lofi(mix, len, sr, { intro: [[m, 'Dmaj9']], sections: [{ from: m + 0.9, to: len - s.tail - 0.2, drums: 0.35 }], outro: { at: len - s.tail, chord: 'Dmaj9' }, crackle: 0.035 });
+  // A film-first opening plays the film's own sound, down under the narrator, gone soon after the pull-back.
+  const film = s.screen?.sound(sr, V(m) + 1.4, 0.6);
+  if (film) {
+    const talk = V(s.voiceAt) - 0.15;
+    for (const ch of [film.left, film.right]) for (let i = 0; i < ch.length; i++) ch[i] *= i / sr < talk ? 1 : 0.2 + 0.8 * Math.max(0, 1 - (i / sr - talk) / 0.4);
+    mix.bus('film', { gain: 0.45, reverb: 0 });
+    mix.add('film', 0, film.left, { pan: -1 });
+    mix.add('film', 0, film.right, { pan: 1 });
+  }
 
   const put = (at: number, buffer: Float32Array, gain: number, pan: number) => mix.add('sfx', at, buffer, { gain, pan });
   for (const c of s.sound.cues) {

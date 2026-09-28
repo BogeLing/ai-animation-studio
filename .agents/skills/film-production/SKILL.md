@@ -57,6 +57,7 @@ Reach for these before writing the same thing again. Each has TSDoc with an exam
 | `polaroid.ts` | `Polaroid` (an instant photo whose picture is drawn once), `between` / `stackPose` / `albumPose` for its flight, `handCamera`, `flash`. |
 | `lofi.ts` | `lofi(mix, …)`: a warm lo-fi score from sections (keys, bass, half-time beat, tune, crackle), in video time. |
 | `foley.ts` | `foley.*`: normalised paper-world effects (pop, knock, slide, whoosh, tape, tap, stamp, clank, shutter, whirr, chime, birds, gull, surf…). |
+| `screen.ts` | `Screen`: a film playing inside a scene (a paper TV); another stage stepped in lockstep, drawn into a rectangle, its sound mixed in. `Plan.screen` (`examples/tutorial/studio.ts`) opens a film on one. |
 | `narration.ts` | `loadVoice` + `Narration`: a voice track with every word's time; `n.at(block, word)` times what appears on screen, `n.subtitles()` makes the captions. |
 
 ## Planning rules

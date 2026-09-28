@@ -50,3 +50,17 @@ super(canvas, { duration: LENGTH, preroll: 0.4, rate: speedRamp(TRANSITIONS) });
 - Tile a transition at 5 fps (`ffmpeg -ss <t> -t 2.4 -vf fps=5,scale=384:-1,tile=4x3`) and check that the
   move takes 1.5 s or more with no frame where the character vanishes.
 - Watch the chapter after a flight: the first stop must start from the landing point.
+
+## Narrated films: the opening, the holds, the tail
+
+Measured on the tutorial and a Chinese cut of it (September 2026), whose pace otherwise held up (about 160 words
+a minute in English, 240 characters a minute in Chinese, something new on a board every ~2 s):
+
+- **Don't hold the title for the whole opening sentence.** The title card stood alone for 10.5 s before the
+  first board. A shorter first line, and leaving the opening 1.5 s before that line ends (`Plan.leave` in
+  `examples/tutorial/studio.ts`), brought the first board in at 5.6–6.7 s in a tightened cut. An intro can
+  open on a finished film instead: one playing on a paper TV (`Plan.screen`, `examples/shared/screen.ts`).
+- **Find the holds from the cue list.** `pnpm listen <name>` writes `out/<name>_cues.json`; the pips, keys and
+  stamps are the boards' beats, so long gaps between them are stretches where nothing new appears. Over ~5 s at
+  one board drags: cut the sentence behind it (a detail of how the smoke test works cost 5–6 s).
+- **A 2 s tail is enough** after the last line; the score's last chord rings through it.

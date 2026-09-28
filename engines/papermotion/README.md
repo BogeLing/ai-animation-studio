@@ -47,7 +47,8 @@ The cast the films share, and building blocks for new films. Each has TSDoc with
 | `daySky.ts` | `dayAt(d)`: a day from morning to sunset (sky, sun, sea, hills), `paintSky`, `paintSun`, `tinted`. |
 | `polaroid.ts` | `Polaroid`: an instant photo whose picture is drawn once from the set's own props; poses for its flight to a stack and an album; `handCamera`, `flash`. |
 | `lofi.ts` | `lofi(mix, …)`: a warm lo-fi score from sections: electric-piano chords, bass, a half-time beat, a tune, vinyl crackle. |
-| `narration.ts` | `loadVoice` and `Narration`: a voice track with the time of every word, so pictures, sounds and subtitles follow the narrator (`n.at('block', 'word')`, `n.subtitles()`). Voice the script with `tools/voice/narrate.py`. |
+| `screen.ts` | `Screen`: a film playing inside a scene, e.g. on a paper TV: another stage stepped in lockstep with it (every render worker sees the same frames), drawn into a rectangle, with its own sound to mix in. |
+| `narration.ts` | `loadVoice` and `Narration`: a voice track with the time of every word, so pictures, sounds and subtitles follow the narrator (`n.at('block', 'word')`, `n.subtitles()`), in English or in Chinese. Voice the script with `tools/voice/narrate.py`. |
 | `foley.ts` | `foley.*`: normalised paper-world effects: pop, knock, letter, slide, whoosh, swish, tape, tap, click, crumple, stamp, clank, shutter, whirr, chime, birds, gull, surf, pluck. |
 
 ## Sets in 3D and camera scouting

@@ -5,17 +5,18 @@ import { box, card, ellipse, place, pop, rrect, sparkle } from '../shared/kit';
 import { PaperPlane } from '../shared/Plane';
 import { Polaroid } from '../shared/polaroid';
 import type { Narration } from '../shared/narration';
+import { EN, type TutorialText } from './text';
 
 export const INK = '#2b2521', CREAM = '#fbf6ea', RED = '#d9644f', NAVY = '#2d3a4a', GOLD = '#ffd84d', GREEN = '#4f9e62';
 export const MONO = '"DejaVu Sans Mono", Menlo, Consolas, monospace';
-const LABEL = '800 26px Montserrat';
 
 /** How far a thing has come in, 0…1+, `d` seconds after `t0` (with a pop-up overshoot). */
-const inn = (t: number, t0: number, d = 0.35) => pop(t, t0, d);
-const typed = (text: string, t: number, t0: number, cps = 42) => (t < t0 ? '' : text.slice(0, Math.floor((t - t0) * cps)));
+export const inn = (t: number, t0: number, d = 0.35) => pop(t, t0, d);
+export const typed = (text: string, t: number, t0: number, cps = 42) => (t < t0 ? '' : text.slice(0, Math.floor((t - t0) * cps)));
+export const UNSPACED = /[\u3000-\u9fff\uff00-\uffef]/;
 
 /** An arrow from a toward b, drawn out as u goes 0 → 1. */
-function arrow(paper: Paper, a: V, b: V, u: number, color = INK, width = 5): void {
+export function arrow(paper: Paper, a: V, b: V, u: number, color = INK, width = 5): void {
   if (u <= 0) return;
   const k = Math.min(1, u), e = { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k) }, ang = Math.atan2(b.y - a.y, b.x - a.x), s = 10 + width * 1.8;
   paper.line([a, { x: e.x - Math.cos(ang) * s * 0.7, y: e.y - Math.sin(ang) * s * 0.7 }], color, width);
@@ -31,7 +32,7 @@ function arrow(paper: Paper, a: V, b: V, u: number, color = INK, width = 5): voi
 }
 
 /** Plain text, not cut from paper: for terminal and code lines, which change every frame. */
-function write(paper: Paper, text: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign = 'left'): void {
+export function write(paper: Paper, text: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign = 'left'): void {
   const g = paper.context;
   g.save();
   g.font = font;
@@ -41,23 +42,13 @@ function write(paper: Paper, text: string, x: number, y: number, font: string, c
   g.restore();
 }
 
-/** A small paper label (a chip) centred at x, y. */
-function chip(paper: Paper, x: number, y: number, text: string, k: number, fill = '#fffdf8', ink = INK, font = LABEL, seed = 1): void {
-  if (k <= 0.01) return;
-  const w = textWidth(paper.context, text, font) + 36;
-  place(paper, x, y, k, 0, () => {
-    card(paper, () => paper.piece(rrect(-w / 2, -26, w / 2, 26, 12), fill, { seed, tear: 0.8 }), { shadow: 6 });
-    paper.text(text, { x: 0, y: 9 }, { font, color: ink, align: 'center', sheet: { shadow: 0 } });
-  });
-}
-
 /** A glow behind something that's active. */
-function glow(paper: Paper, w: number, h: number, alpha: number, color = GOLD): void {
+export function glow(paper: Paper, w: number, h: number, alpha: number, color = GOLD): void {
   if (alpha > 0.01) paper.layer(alpha, () => paper.piece(rrect(-w / 2 - 14, -h / 2 - 14, w / 2 + 14, h / 2 + 14, 22), color, { seed: 9, tear: 0.4, shadow: 0, edge: false, texture: 0 }));
 }
 
 /** A little landscape (sky, hill, sun) inside a w × h window centred on 0, 0: the stand-in for a rendered frame. */
-function miniScene(paper: Paper, w: number, h: number, sunX: number, seed: number, sky = ['#9cc7ea', '#fbeed6']): void {
+export function miniScene(paper: Paper, w: number, h: number, sunX: number, seed: number, sky = ['#9cc7ea', '#fbeed6']): void {
   const g = paper.context, grad = g.createLinearGradient(0, -h / 2, 0, h / 2);
   grad.addColorStop(0, sky[0]);
   grad.addColorStop(1, sky[1]);
@@ -76,22 +67,38 @@ function miniScene(paper: Paper, w: number, h: number, sunX: number, seed: numbe
 export class Boards {
   private readonly mini = new Clawd({ x: 0, y: 0 }, 9, 3100, [1.2, 4.4]);
   private readonly plane = new PaperPlane({ x: 0, y: 0 }, 0, 3200);
-  private readonly photo = new Polaroid((paper, w, h) => {
-    const g = paper.context, day = dayAt(3);
-    const grad = g.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, day.sky[0]);
-    grad.addColorStop(1, day.sky[2]);
-    g.fillStyle = grad;
-    g.fillRect(0, 0, w, h);
-    place(paper, w / 2, h / 2, 1, 0, () => miniScene(paper, w, h, 0.7, 60, [day.sky[0], day.sky[2]]));
-  }, { label: 'Snap!', seed: 7 });
+  private readonly photo: Polaroid;
 
-  constructor(private readonly paper: Paper, private readonly n: Narration) {
+  constructor(protected readonly paper: Paper, protected readonly n: Narration, protected readonly text: TutorialText = EN) {
     this.mini.width = 0.8;
+    this.photo = new Polaroid((paper, w, h) => {
+      const g = paper.context, day = dayAt(3);
+      const grad = g.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, day.sky[0]);
+      grad.addColorStop(1, day.sky[2]);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, h);
+      place(paper, w / 2, h / 2, 1, 0, () => miniScene(paper, w, h, 0.7, 60, [day.sky[0], day.sky[2]]));
+    }, { label: text.modules.snap, labelFont: this.font(700, 26), seed: 7 });
+  }
+
+  /** A canvas font in the text's families. */
+  protected font(weight: number, px: number): string { return `${weight} ${px}px ${this.text.family}`; }
+
+  /** A small paper label (a chip) centred at x, y. */
+  protected chip(x: number, y: number, text: string, k: number, fill = '#fffdf8', ink = INK, font = this.font(800, 26), seed = 1): void {
+    const { paper } = this;
+    if (k <= 0.01) return;
+    const w = textWidth(paper.context, text, font) + 36;
+    place(paper, x, y, k, 0, () => {
+      card(paper, () => paper.piece(rrect(-w / 2, -26, w / 2, 26, 12), fill, { seed, tear: 0.8 }), { shadow: 6 });
+      paper.text(text, { x: 0, y: 9 }, { font, color: ink, align: 'center', sheet: { shadow: 0 } });
+    });
   }
 
   /** Move what has springs (the hop-walk demo's Clawd) on the stage's fixed step, so every render worker agrees. */
   update(t: number, dt: number): void {
+    if (!this.n.voice.blocks.some(b => b.id === 'modules')) return;
     const c = this.mini, u = t - this.n.at('modules', 'hop'), s = (Math.max(0, u) * 0.5) % 2, dir = s < 1 ? 1 : -1, v = s < 1 ? s : 2 - s;
     c.rest();
     c.root = { x: lerp(-130, 130, v), y: 88 - Math.abs(Math.sin(v * Math.PI * 3)) * 40 };
@@ -113,9 +120,9 @@ export class Boards {
     place(paper, bx, by, 1, 0, () => {
       card(paper, () => paper.piece(rrect(-700, -340, 700, 340, 18), CREAM, { seed, tear: 1.4 }), { shadow: 16 });
       for (const x of [-620, 620]) card(paper, () => paper.piece(rrect(x - 46, -356, x + 46, -326, 3), 'rgba(236, 220, 170, 0.92)', { seed: seed + x, tear: 1.2 }), { shadow: 2 });
-      const w = textWidth(paper.context, header, '800 28px Montserrat') + 40;
+      const w = textWidth(paper.context, header, this.font(800, 28)) + 40;
       card(paper, () => paper.piece(rrect(-670, -318, -670 + w, -270, 10), NAVY, { seed: seed + 3, tear: 0.8 }), { shadow: 5 });
-      paper.text(header, { x: -670 + w / 2, y: -284 }, { font: '800 28px Montserrat', color: '#ffffff', align: 'center', sheet: { shadow: 0 } });
+      paper.text(header, { x: -670 + w / 2, y: -284 }, { font: this.font(800, 28), color: '#ffffff', align: 'center', sheet: { shadow: 0 } });
     });
     content();
     g.restore();
@@ -124,8 +131,8 @@ export class Boards {
   /** 01 · No video model: code → frames → sound. */
   how(bx: number, by: number, t: number): void {
     const { paper, n } = this, cy = by + 40;
-    chip(paper, bx + 400, by - 245, 'video model', inn(t, n.at('how', 'video')), '#f3e9dc', '#8a7f74', '800 38px Montserrat', 4);
-    const strike = clamp((t - n.at('how', 'video') - 0.25) / 0.3), sw = textWidth(paper.context, 'video model', '800 38px Montserrat') / 2 + 26;
+    this.chip(bx + 400, by - 245, this.text.how.video, inn(t, n.at('how', 'video')), '#f3e9dc', '#8a7f74', this.font(800, 38), 4);
+    const strike = clamp((t - n.at('how', 'video') - 0.25) / 0.3), sw = textWidth(paper.context, this.text.how.video, this.font(800, 38)) / 2 + 26;
     if (strike > 0) paper.line([{ x: bx + 400 - sw, y: by - 245 }, { x: lerp(bx + 400 - sw, bx + 400 + sw, strike), y: by - 245 }], RED, 9);
     // The code card.
     const code = inn(t, n.at('how', 'writes'));
@@ -136,7 +143,7 @@ export class Boards {
       let t0 = n.at('how', 'writes') + 0.2;
       lines.forEach(([text, color], i) => { write(paper, typed(text, t, t0), -210, -70 + i * 48, `600 24px ${MONO}`, color); t0 += text.length / 42 + 0.1; });
     });
-    chip(paper, bx - 380, cy + 205, 'code', code);
+    this.chip(bx - 380, cy + 205, this.text.how.code, code);
     arrow(paper, { x: bx - 125, y: cy }, { x: bx - 45, y: cy }, (t - n.at('how', 'papermotion')) / 0.3);
     // The film strip: frames appear one at a time.
     const film = inn(t, n.at('how', 'papermotion'));
@@ -150,7 +157,7 @@ export class Boards {
         if (k > 0) place(paper, -118 + i * 118, -4, k, 0, () => card(paper, () => miniScene(paper, 100, 130, i / 2, 120 + i * 5), { shadow: 3 }));
       }
     });
-    chip(paper, bx + 170, cy + 205, 'frames', film);
+    this.chip(bx + 170, cy + 205, this.text.how.frames, film);
     arrow(paper, { x: bx + 375, y: cy }, { x: bx + 445, y: cy }, (t - n.at('how', 'music')) / 0.3);
     // The sound card: bars moving like a meter.
     const sound = inn(t, n.at('how', 'music'));
@@ -163,7 +170,7 @@ export class Boards {
       write(paper, '♪', -60, -60 + 6 * Math.sin(t * 4), '800 40px Montserrat', RED);
       write(paper, '♫', 40, -58 + 6 * Math.sin(t * 4 + 1.5), '800 40px Montserrat', NAVY);
     });
-    chip(paper, bx + 560, cy + 205, 'music & sound', sound);
+    this.chip(bx + 560, cy + 205, this.text.how.sound, sound);
   }
 
   /** 02 · Edit anything: move a prop, rewrite a caption, retime a beat, render again. */
@@ -185,11 +192,11 @@ export class Boards {
         card(paper, () => { paper.piece(rrect(hx - 16, hy - 6, hx + 16, hy + 40, 10), '#fff4e8', { seed: 205, tear: 0.4 }); paper.piece(rrect(hx - 7, hy - 40, hx + 7, hy, 6), '#fff4e8', { seed: 206, tear: 0.3 }); }, { shadow: 6 });
       }
       // The caption: rewritten, it flips over.
-      const re = n.at('edit', 'rewrite'), flip = clamp((t - re) / 0.4), text = flip < 0.5 ? 'The tree stands still.' : 'The tree has moved!';
-      const w = textWidth(paper.context, text, '700 30px Montserrat') + 50;
+      const re = n.at('edit', 'rewrite'), flip = clamp((t - re) / 0.4), text = flip < 0.5 ? this.text.edit.still : this.text.edit.moved;
+      const w = textWidth(paper.context, text, this.font(700, 30)) + 50;
       place(paper, 0, 172, 1, 0, () => {
         card(paper, () => paper.piece(rrect(-w / 2, -28, w / 2, 28, 4), flip >= 0.5 ? '#fbe7a6' : '#ecdfc6', { seed: 207, tear: 1.2 }), { shadow: 6 });
-        paper.text(text, { x: 0, y: 11 }, { font: '700 30px Montserrat', color: INK, align: 'center', sheet: { shadow: 0 } });
+        paper.text(text, { x: 0, y: 11 }, { font: this.font(700, 30), color: INK, align: 'center', sheet: { shadow: 0 } });
       }, Math.abs(Math.cos(flip * Math.PI)) * 0.9 + 0.1);
     });
     // The timeline under the window: the third beat slides later.
@@ -214,7 +221,7 @@ export class Boards {
       const ok = inn(t, again + 0.95, 0.3);
       if (ok > 0) place(paper, 70, -70, ok, 0, () => { card(paper, () => paper.piece(circlePoly({ x: 0, y: 0 }, 38, 24), GREEN, { seed: 222, tear: 0.4 }), { shadow: 6 }); paper.line([{ x: -16, y: 0 }, { x: -4, y: 13 }, { x: 18, y: -12 }], '#ffffff', 8); });
     });
-    chip(paper, bx + 470, by + 200, 'render again', btn);
+    this.chip(bx + 470, by + 200, this.text.edit.again, btn);
   }
 
   /** 03 · Quick start: the terminal (three commands, the smoke test), then rendering the plane film. */
@@ -276,31 +283,34 @@ export class Boards {
         for (let i = 0; i < 2; i++) paper.line(Array.from({ length: 9 }, (_, k) => { const b = -0.8 + k * 0.2; return { x: 14 + Math.cos(b) * (16 + i * 12), y: Math.sin(b) * (16 + i * 12) }; }), '#fffdf8', 4);
       });
     });
-    chip(paper, bx + 520, by + 235, 'plane.mp4', screen);
+    this.chip(bx + 520, by + 235, 'plane.mp4', screen);
   }
 
   /** 04 · Just ask: a chat with the agent. */
   ask(bx: number, by: number, t: number): void {
     const { paper, n } = this;
-    chip(paper, bx - 400, by - 250, '>_ Claude Code', inn(t, n.at('ask', 'Claude')), '#fffdf8', NAVY, '800 26px Montserrat', 2);
-    chip(paper, bx - 110, by - 250, '>_ Codex', inn(t, n.at('ask', 'Codex')), '#fffdf8', NAVY, '800 26px Montserrat', 3);
+    this.chip(bx - 400, by - 236, '>_ Claude Code', inn(t, n.at('ask', 'Claude')), '#fffdf8', NAVY, '800 26px Montserrat', 2);
+    this.chip(bx - 110, by - 236, '>_ Codex', inn(t, n.at('ask', 'Codex')), '#fffdf8', NAVY, '800 26px Montserrat', 3);
     const chat = inn(t, n.at('ask', 'open'));
     if (chat <= 0) return;
-    const prompt = 'Make a 20-second paper cut-out film: a lighthouse keeper adopts a seagull. Cozy, lo-fi, with captions.';
-    const reply = 'On it. Storyboard first, then key frames for you to review.';
+    const { prompt, reply, cps } = this.text.ask;
+    // Latin wraps between words; Chinese between any two characters, but not before a comma or a full stop.
     const wrap = (text: string, font: string, width: number) => {
-      const out: string[] = [];
+      const out: string[] = [], cjk = UNSPACED.test(text), gap = cjk ? '' : ' ';
       let line = '';
-      for (const word of text.split(' ')) { const next = line ? `${line} ${word}` : word; if (textWidth(paper.context, next, font) > width && line) { out.push(line); line = word; } else line = next; }
+      for (const word of cjk ? [...text] : text.split(' ')) {
+        const next = line ? `${line}${gap}${word}` : word;
+        if (textWidth(paper.context, next, font) > width && line && !(cjk && /[，。、：；！？）]/.test(word))) { out.push(line); line = word; } else line = next;
+      }
       if (line) out.push(line);
       return out;
     };
     place(paper, bx - 20, by + 40, chat, 0, () => {
       card(paper, () => paper.piece(rrect(-520, -230, 520, 230, 18), '#fffdf8', { seed: 401, tear: 0.8 }), { shadow: 14 });
       card(paper, () => paper.piece(rrect(-520, -230, 520, -180, 18), '#e9e2d6', { seed: 402, tear: 0.4 }), { shadow: 0, edge: false });
-      write(paper, 'your agent', 0, -196, '700 22px Montserrat', '#7a7066', 'center');
+      write(paper, this.text.ask.agent, 0, -196, this.font(700, 22), '#7a7066', 'center');
       // Your message, typed, in a bubble on the right.
-      const font = '600 27px Montserrat', shown = typed(prompt, t, n.at('ask', 'ask', 1) + 0.1, 48), lines = wrap(shown || ' ', font, 560);
+      const font = this.font(600, 27), shown = typed(prompt, t, n.at('ask', 'ask', 1) + 0.1, cps), lines = wrap(shown || ' ', font, 560);
       const full = wrap(prompt, font, 560), h = full.length * 38 + 34;
       if (shown) {
         card(paper, () => paper.piece(rrect(-120, -150, 480, -150 + h, 18), '#dbe9f7', { seed: 403, tear: 0.6 }), { shadow: 5 });
@@ -316,7 +326,7 @@ export class Boards {
         rl.forEach((l, i) => write(paper, l, 22, 40 + i * 38, font, INK));
       });
     });
-    ['story', 'style', 'long'].forEach((word, i) => chip(paper, bx + 190 + i * 150, by + 305, ['story', 'style', 'length'][i], inn(t, n.at('ask', word)), '#fbe7a6', INK, '800 24px Montserrat', 10 + i));
+    ['story', 'style', 'long'].forEach((word, i) => this.chip(bx + 190 + i * 150, by + 305, this.text.ask.asks[i], inn(t, n.at('ask', word)), '#fbe7a6', INK, this.font(800, 24), 10 + i));
   }
 
   /** 05 · The production loop: five steps around the skill, lit in turn. */
@@ -326,9 +336,9 @@ export class Boards {
     if (center > 0) place(paper, cx, cy, center, 0, () => {
       card(paper, () => paper.piece(ellipse({ x: 0, y: 0 }, 180, 70, 36), NAVY, { seed: 501, tear: 1 }), { shadow: 10 });
       paper.text('film-production', { x: 0, y: -2 }, { font: '800 30px Montserrat', color: '#ffffff', align: 'center', sheet: { shadow: 0 } });
-      paper.text('skill', { x: 0, y: 32 }, { font: '700 24px Montserrat', color: '#cfd8e6', align: 'center', sheet: { shadow: 0 } });
+      paper.text(this.text.loop.skill, { x: 0, y: 32 }, { font: this.font(700, 24), color: '#cfd8e6', align: 'center', sheet: { shadow: 0 } });
     });
-    const steps: [string, string][] = [['Storyboard', 'storyboards'], ['Review', 'key'], ['Pacing', 'pacing'], ['Sound', 'score'], ['Render', 'renders']];
+    const steps = ['storyboards', 'key', 'pacing', 'score', 'renders'].map((word, i): [string, string] => [this.text.loop.steps[i], word]);
     const at = steps.map(([, w]) => n.at('loop', w)), pos = steps.map((_, i) => { const a = -Math.PI / 2 + (i / 5) * Math.PI * 2; return { x: cx + Math.cos(a) * 470, y: cy + Math.sin(a) * 215 }; });
     steps.forEach(([label], i) => {
       const next = pos[(i + 1) % 5], u = i < 4 ? (t - at[i + 1] + 0.35) / 0.35 : 0;
@@ -340,7 +350,7 @@ export class Boards {
         glow(paper, 230, 130, active ? 0.75 : 0);
         card(paper, () => paper.piece(rrect(-115, -65, 115, 65, 14), '#fffdf8', { seed: 510 + i, tear: 0.8 }), { shadow: 8 });
         this.icon(i, t);
-        paper.text(label, { x: 0, y: 52 }, { font: '800 24px Montserrat', color: INK, align: 'center', sheet: { shadow: 0 } });
+        paper.text(label, { x: 0, y: 52 }, { font: this.font(800, 24), color: INK, align: 'center', sheet: { shadow: 0 } });
       });
     });
   }
@@ -377,12 +387,12 @@ export class Boards {
       const k = overshoot(clamp((u - 0.2) / 0.3), 1.6), w = 300;
       if (k > 0) place(paper, 0, 30, 0.9 + 0.1 * k, 0.02, () => {
         card(paper, () => paper.piece(rrect(-w / 2, -26, w / 2, 26, 4), '#ecdfc6', { seed: 610, tear: 1.4 }), { shadow: 4 + 8 * (1 - k), alpha: clamp(k * 3) });
-        paper.text('Hello, paper world', { x: 0, y: 9 }, { font: '700 26px Montserrat', color: INK, align: 'center', sheet: { shadow: 0, alpha: clamp(k * 3) } });
+        paper.text(this.text.modules.caption, { x: 0, y: 9 }, { font: this.font(700, 26), color: INK, align: 'center', sheet: { shadow: 0, alpha: clamp(k * 3) } });
       });
     }
     if (i === 1) {   // letters dropping in, kerned as the word
-      const font = '800 72px Montserrat', x0 = -textWidth(paper.context, 'TITLE', font) / 2;
-      layoutLetters(paper.context, 'TITLE', font).forEach((l, k) => {
+      const font = this.font(800, 72), title = this.text.modules.title, x0 = -textWidth(paper.context, title, font) / 2;
+      layoutLetters(paper.context, title, font).forEach((l, k) => {
         const e = clamp((u - 0.15 - k * 0.09) / 0.4);
         if (e > 0) paper.text(l.ch, { x: x0 + l.x, y: 52 - 70 * (1 - overshoot(e, 1.9)) }, { font, color: k % 2 ? RED : NAVY, angle: (1 - e) * 0.3, sheet: { shadow: 6, rim: { color: '#ffffff', width: 2 }, alpha: clamp(e * 5) } });
       });
@@ -441,15 +451,15 @@ export class Boards {
         });
       }
     }
-    chip(paper, bx - 150, by + 280, 'frames drawn in parallel', workers);
+    this.chip(bx - 150, by + 280, this.text.speed.parallel, workers);
     // The timer.
     const tk = inn(t, n.at('speed', 'twelve'));
     if (tk > 0) place(paper, bx + 450, by - 215, tk, 0.01, () => {
       card(paper, () => paper.piece(rrect(-190, -70, 190, 70, 14), '#fffdf8', { seed: 750, tear: 0.8 }), { shadow: 10 });
       const secs = Math.min(40, Math.round(clamp((t - n.at('speed', 'forty') + 0.8) / 0.8) * 40));
-      paper.text('12 s film', { x: -90, y: -8 }, { font: '800 32px Montserrat', color: NAVY, align: 'center', sheet: { shadow: 0 } });
-      paper.text(`→ ${secs} s`, { x: 90, y: -8 }, { font: '800 32px Montserrat', color: RED, align: 'center', sheet: { shadow: 0 } });
-      paper.text('on a laptop GPU', { x: 0, y: 40 }, { font: '700 22px Montserrat', color: '#7a7066', align: 'center', sheet: { shadow: 0 } });
+      paper.text(this.text.speed.film, { x: -90, y: -8 }, { font: this.font(800, 32), color: NAVY, align: 'center', sheet: { shadow: 0 } });
+      paper.text(this.text.speed.took(secs), { x: 90, y: -8 }, { font: this.font(800, 32), color: RED, align: 'center', sheet: { shadow: 0 } });
+      paper.text(this.text.speed.where, { x: 0, y: 40 }, { font: this.font(700, 22), color: '#7a7066', align: 'center', sheet: { shadow: 0 } });
     });
     // The GPU chip.
     const gpu = inn(t, n.at('speed', 'GPU'));
@@ -473,7 +483,7 @@ export class Boards {
       if (st > 0) place(paper, bx - 150, stripY + 5, 1 + 0.5 * (1 - clamp(st / 0.15)) ** 2, -0.12, () => paper.layer(0.9 * clamp(st * 6), () => {
         const c = paper.context;
         c.save(); c.strokeStyle = c.fillStyle = GREEN; c.lineWidth = 9;
-        c.strokeRect(-190, -50, 380, 100); c.font = '800 54px Montserrat'; c.textAlign = 'center'; c.fillText('CHECKED ✓', 0, 20); c.restore();
+        c.strokeRect(-190, -50, 380, 100); c.font = this.font(800, 54); c.textAlign = 'center'; c.fillText(this.text.speed.checked, 0, 20); c.restore();
       }, 'multiply'));
     }
   }
@@ -481,7 +491,8 @@ export class Boards {
   /** 08 · Get started: the address and three steps. */
   outro(bx: number, by: number, t: number): void {
     const { paper, n } = this, t0 = n.at('outro', 'Clone');
-    const url = inn(t, t0 - 0.3, 0.45);
+    // The address comes up just before "Clone", or on a word of its own when the cues give it one.
+    const url = inn(t, this.text.cues?.outro?.url !== undefined ? n.at('outro', 'url') : t0 - 0.3, 0.45);
     if (url > 0) {
       const text = 'github.com/BogeLing/ai-animation-studio', w = textWidth(paper.context, text, '800 54px Montserrat') + 90;
       place(paper, bx, by - 90, url, -0.01, () => {
@@ -489,8 +500,8 @@ export class Boards {
         paper.text(text, { x: 0, y: 19 }, { font: '800 54px Montserrat', color: NAVY, align: 'center', sheet: { shadow: 0 } });
       });
     }
-    ([['1 · Clone it', 'Clone'], ['2 · Open your agent', 'open'], ['3 · Make your first film', 'make']] as const).forEach(([text, word], i) =>
-      chip(paper, bx - 430 + i * 430, by + 110, text, inn(t, n.at('outro', word)), i === 2 ? '#fbe7a6' : '#fffdf8', INK, '800 30px Montserrat', 810 + i));
+    (['Clone', 'open', 'make'] as const).forEach((word, i) =>
+      this.chip(bx - 430 + i * 430, by + 110, this.text.outro[i], inn(t, n.at('outro', word)), i === 2 ? '#fbe7a6' : '#fffdf8', INK, this.font(800, 30), 810 + i));
     for (let i = 0; i < 6; i++) if (t > t0 + 1.2) sparkle(paper, { x: bx - 600 + i * 240 + 20 * Math.sin(t * 2 + i), y: by - 230 + 30 * Math.sin(t * 3 + i * 1.7) }, 14 + 6 * Math.sin(t * 4 + i), i % 2 ? GOLD : '#f6c4be', 820 + i);
   }
 }

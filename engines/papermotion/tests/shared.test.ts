@@ -131,3 +131,52 @@ describe('Narration', () => {
     expect(subs[3].to).toBeCloseTo(5.35);
   });
 });
+
+describe('Narration in Chinese', () => {
+  const voice: Voice = {
+    length: 9, rate: 48000, samples: new Float32Array(1),
+    blocks: [{
+      id: 'z', text: '智能体用 TypeScript 写出每一个场景，引擎一帧一帧地画出来。故事，风格，还有时长。', start: 0.2, end: 8,
+      words: [['智能体', 0.3, 0.8], ['用', 0.8, 0.9], ['TypeScript', 0.95, 1.6], ['写出', 1.65, 2], ['每一个', 2, 2.4], ['场景', 2.4, 2.8],
+        ['引擎', 3, 3.4], ['一帧一帧', 3.4, 4.2], ['地画', 4.2, 4.5], ['出来', 4.5, 4.9], ['故事', 5.3, 5.7], ['风格', 5.9, 6.3], ['还有', 6.5, 6.8], ['时长', 6.8, 7.4]],
+    }],
+  };
+  const n = new Narration(voice, 1, { z: { writes: '写出', frame: ['一帧', 2] } });
+
+  it('finds any run of characters, inside a word or across words, and English words by prefix', () => {
+    expect(n.at('z', '智能体')).toBeCloseTo(1.3);
+    expect(n.at('z', '能')).toBeCloseTo(1.3 + 0.5 / 3);
+    expect(n.at('z', '场景引擎')).toBeCloseTo(3.4);
+    expect(n.at('z', 'type')).toBeCloseTo(1.95);
+    expect(() => n.at('z', '视频')).toThrow(/视频/);
+  });
+
+  it('re-maps the cue words a scene was timed to in another language', () => {
+    expect(n.at('z', 'writes')).toBeCloseTo(2.65);
+    expect(n.at('z', 'frame')).toBeCloseTo(4.8);   // the second 一帧
+  });
+
+  it('cuts subtitles by length, joins short clauses and drops the punctuation at their ends', () => {
+    const subs = n.subtitles(9, 12);
+    expect(subs.map(s => s.text)).toEqual(['智能体用 TypeScript', '写出每一个场景', '引擎一帧一帧地画出来', '故事 风格 还有时长']);
+    expect(subs[0].from).toBeCloseTo(1.18);
+    expect(subs[0].to).toBeCloseTo(subs[1].from);
+    expect(subs[3].to).toBeCloseTo(9.35);
+  });
+
+  it('cuts a sentence at its colon rather than evenly, and leaves no strip up for under 1.2 s', () => {
+    const v: Voice = {
+      length: 12, rate: 48000, samples: new Float32Array(1),
+      blocks: [
+        { id: 'a', text: '入门只要三条命令：克隆仓库，安装依赖，再跑一遍冒烟测试。', start: 0, end: 4.6,
+          words: [['入门', 0.2, 0.5], ['只要', 0.5, 0.8], ['三条', 0.8, 1.1], ['命令', 1.1, 1.5], ['克隆', 1.7, 2], ['仓库', 2, 2.3], ['安装', 2.5, 2.8],
+            ['依赖', 2.8, 3.1], ['再', 3.3, 3.4], ['跑', 3.4, 3.5], ['一遍', 3.5, 3.8], ['冒烟', 3.8, 4.1], ['测试', 4.1, 4.5]] },
+        { id: 'b', text: '一条命令，就能得到一段五秒钟的纸飞机短片，还带声音。', start: 5, end: 11,
+          words: [['一条', 5.1, 5.4], ['命令', 5.4, 5.9], ['就', 6.1, 6.2], ['能', 6.2, 6.3], ['得到', 6.3, 6.6], ['一段', 6.6, 6.9], ['五秒钟', 6.9, 7.5],
+            ['的', 7.5, 7.6], ['纸飞机', 7.6, 8.1], ['短片', 8.1, 8.6], ['还', 8.9, 9.1], ['带', 9.1, 9.3], ['声音', 9.3, 9.9]] },
+      ],
+    };
+    expect(new Narration(v, 0).subtitles(9, 20).map(s => s.text))
+      .toEqual(['入门只要三条命令', '克隆仓库 安装依赖 再跑一遍冒烟测试', '一条命令 就能得到一段五秒钟的纸飞机短片', '还带声音']);
+  });
+});

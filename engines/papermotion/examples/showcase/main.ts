@@ -59,7 +59,8 @@ export class ShowcaseScene extends Stage {
   private readonly flowers: PropSet;
   private readonly front: PropSet;
 
-  constructor(canvas: HTMLCanvasElement) {
+  /** `captions: false` leaves out the captions, e.g. for the film playing on a TV in another film. */
+  constructor(canvas: HTMLCanvasElement, private readonly o: { captions?: boolean } = {}) {
     super(canvas, { duration: LENGTH, preroll: 0.4 });
     this.paper.light = { x: -0.5, y: 0.8 };
     this.clawd.width = 0.8;
@@ -170,7 +171,7 @@ export class ShowcaseScene extends Stage {
     if (t > PLANE.from && t < PLANE.to) place(paper, this.plane.pos.x, this.plane.pos.y, -2.2, 0, () => { const p = this.plane.pos; this.plane.pos = { x: 0, y: 0 }; this.plane.draw(paper); this.plane.pos = p; }, 2.2);
     wash(ctx, '#ff9c5a', 0.1 * smoothstep(2.4, 4, d), 'multiply');
     this.album(t);
-    CAPTIONS.draw(paper, t);
+    if (this.o.captions !== false) CAPTIONS.draw(paper, t);
     this.title.draw(paper, t);
     this.endCard(t);
     for (const s of STOPS) flash(ctx, t, s.photo);

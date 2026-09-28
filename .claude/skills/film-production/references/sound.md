@@ -74,6 +74,15 @@ style per chapter (guzheng-like in one, electronic in another). What replaced it
 - Check intelligibility without ears: transcribe the mix (`tools/audio/analyze.py … --model small.en`) and
   compare with the script. A word the recogniser mishears (it heard "hop walks" as "pop walks") is worth
   rephrasing.
+- Another language: voice the translated script with a voice of that language (`--voice zf_001` reads
+  Mandarin), keep the on-screen words in a table per language (the tutorial's `text.ts`), and map each cue
+  word the scene waits for to the new language's word (`new Narration(voice, offset, cues)`). In Chinese a cue
+  is any run of characters, and `subtitles(9, maxChars)` cuts strips by length at punctuation.
+- Mandarin traps: the voice splits text into words and pauses at every boundary, so pass names and terms with
+  `--words` (they also keep their tones: 拍立得 would end in a neutral 得); write numbers in characters; avoid
+  polyphones it misreads (多长 as duō zhǎng: say 时长). Whisper in Chinese (`--language zh`) writes homophones
+  (帧 as 针, 屏 as 瓶); only a difference in sound is a mistake. English words come out accented
+  ("Claude Code" merged into one word until 或 became 或者).
 - For public videos, say the voice is synthetic (a line in the description or the credits).
 - Picking a TTS: in September 2026 the best-rated voices were cloud APIs, and the ranking differs by
   language; Kokoro-82M (Apache-2.0) is the local, commercially usable default here.

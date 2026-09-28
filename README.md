@@ -74,7 +74,8 @@ with TSDoc and an example. The `ubc` and `showcase` films use them all.
 | `polaroid.ts` | Instant photos whose pictures are drawn once from the set's own props, their flight to a stack and an album, a hand camera and a flash. |
 | `lofi.ts` | A warm lo-fi score from a few parameters: electric-piano chords, bass, a half-time beat, a tune and vinyl crackle, laid out in video time. |
 | `foley.ts` | Normalised paper-world sound effects: pops, knocks, slides, whooshes, tape, taps, stamps, a bin clank, a shutter, a photo whirr, chimes, birds, gulls and surf. |
-| `narration.ts` | A voice track with the time of every word: boards fill in on the narrator's words and subtitles follow the voice. `tools/voice/narrate.py` voices a script locally with Kokoro-82M. |
+| `screen.ts` | A film playing inside another, on a paper TV or a screen: its frames in step with the scene's, and its sound. |
+| `narration.ts` | A voice track with the time of every word: boards fill in on the narrator's words and subtitles follow the voice. `tools/voice/narrate.py` voices a script locally with Kokoro-82M, in English or Mandarin. |
 | `kit.ts` | Pop-up helpers (one-sheet props, entrances, shapes, cartoon faces) and a clock that fires each sound cue exactly once. |
 | `Clawd.ts`, `Plane.ts` | The cast: a paper rig of the Claude Code mascot, and a paper dart that flies along a track. |
 

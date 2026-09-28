@@ -18,7 +18,8 @@ installs them into a throwaway environment. The transcription model downloads on
 
 | Script | Use |
 | --- | --- |
-| `narrate.py` | `uv run tools/voice/narrate.py script.md public/voice/film.flac [--voice af_heart] [--speed 1.0] [--gap 0.5]`. Voices a narration script with Kokoro-82M (Apache-2.0) on the CPU, and writes the audio plus a JSON with when every block and word is spoken; `examples/shared/narration.ts` loads both. The script is plain text in blocks (`[id]` or `[id gap=0.9]` on a block's first line). Write what should be said: spell out code and show it on screen instead. |
+| `narrate.py` | `uv run tools/voice/narrate.py script.md public/voice/film.flac [--voice af_heart] [--speed 1.0] [--gap 0.5]`. Voices a narration script with Kokoro-82M (Apache-2.0) on the CPU, and writes the audio (at -23 LUFS, so any voice sits the same in a mix) plus a JSON with when every block and word is spoken; `examples/shared/narration.ts` loads both. The script is plain text in blocks (`[id]` or `[id gap=0.9]` on a block's first line). Write what should be said: spell out code and show it on screen instead. A Mandarin voice (`--voice zf_001`) reads Chinese with Kokoro-82M-v1.1-zh and English words in it the English way; `--words 智能体,拍立得` keeps names and terms whole and in their own tones. |
+| `lines.py` | `uv run tools/voice/lines.py lines.json -o voice/ [--voice zf_001] [--words 名字,术语]`. One clip per line instead of one track, for a film whose timeline places each line itself: 48 kHz WAVs at the same speech level, trimmed, and a `timing.json` with each line's length, the phonemes and pinyin read, and every pause the voice put in (to check phrasing and polyphonic characters without listening). |
 
 ## gpu/
 
