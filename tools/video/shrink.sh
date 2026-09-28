@@ -7,7 +7,7 @@
 # The output is limited (tv) range, the standard players and platforms expect; ffmpeg 8 would otherwise keep a
 # full-range source's range, which some players and upload pipelines misread (crushed blacks, clipped whites).
 set -euo pipefail
-if [ $# -lt 2 ]; then sed -n '2,9p' "$0"; exit 1; fi
+if [ $# -lt 2 ]; then sed -n '2,8p' "$0"; exit 1; fi
 in=$1 out=$2 max=${3:-25}
 dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$in")
 audio_k=160
