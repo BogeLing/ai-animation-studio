@@ -3,15 +3,16 @@
 AI coding agents make animated short films as code. No video models: the agent writes the scene, the engine
 renders it frame by frame, and the sound is synthesized from the same events as the picture.
 
-https://github.com/user-attachments/assets/7cf7ffc7-d0e3-4adc-aecb-92b509bde859
+https://github.com/user-attachments/assets/7438de06-bcff-4d28-bf48-592be5efc84e
 
-`ubc`, 12 s, with sound: a quick tour of UBC's campus from morning to sunset (the clock tower on Main Mall, the
-Irving K. Barber Learning Centre, the Museum of Anthropology, Wreck Beach), built from the reusable scene modules.
-The score and every sound effect are synthesized too.
+`ubc25d`, 12 s, with sound: a quick tour of UBC's campus from morning to sunset (the clock tower on Main Mall, the
+Irving K. Barber Learning Centre, the Museum of Anthropology, Wreck Beach), built from the reusable scene modules and
+shot in 2.5D: the paper layers stand at real distances and the lens swings as Clawd walks, so near layers slide across
+far ones. The score and every sound effect are synthesized too.
 
-| ![Clawd hops past a windmill, a balloon town and a lighthouse while the sky runs from morning to sunset](media/showcase.gif) | ![Clawd throws a paper plane, which loops, stalls, flips around and lands on its head](media/paper-plane.gif) |
+| ![Clawd hops past a windmill, a balloon town and a lighthouse while the sky runs from morning to sunset](media/showcase.gif) | ![Clawd throws a paper plane, which loops, stalls, flips around and lands on its head, shot in 2.5D](media/plane-25d.gif) |
 | --- | --- |
-| `showcase`, 12 s: every scene module in a made-up world | `plane`, 5 s: Clawd throws a paper plane |
+| `showcase`, 12 s: every scene module in a made-up world | `plane25d`, 5 s: Clawd throws a paper plane, shot in 2.5D |
 
 All three films were written by Claude (Opus 5.5) in Claude Code, using the skills and tools in this repository.
 
