@@ -36,18 +36,20 @@ pnpm render plane            # → out/plane.mp4, with sound
 pnpm render:fast showcase --workers 6 --gpu --codec nvenc   # parallel, on the GPU
 ```
 
-Then open the repository in Claude Code (or another coding agent) and ask for a film, for example:
+Then start Claude Code or Codex in `engines/papermotion/` and ask for a film, for example:
 
 > Make a 20-second paper cut-out film: a lighthouse keeper adopts a seagull. Captions, a lo-fi score, and send me key frames before the full render.
 
-The agent picks up the skills below: the engine skill for writing the scene, and `film-production` for the
-loop around it (storyboard, key-frame review rounds, pacing, sound, rendering, checks, delivery).
+The agent picks up two skills: the engine's skill for writing the scene, and `film-production` for the loop
+around it (storyboard, key-frame review rounds, pacing, sound, rendering, checks, delivery). They follow the
+open [Agent Skills](https://agentskills.io) format and live in `.agents/skills/`, which Codex reads, with the
+same files in `.claude/skills/` for Claude Code.
 
 ## What's inside
 
 | Path | What |
 | --- | --- |
-| [`.claude/skills/film-production/`](.claude/skills/film-production/) | The production workflow as an agent skill: brief → storyboard → key-frame review → taste decisions side by side → captions, logos and colour → pacing → sound → render → QA → delivery, plus measured cloud-rendering sizing. It doesn't depend on the engine. |
+| [`.agents/skills/film-production/`](.agents/skills/film-production/) | The production workflow as an agent skill (copied to `.claude/skills/` for Claude Code): brief → storyboard → key-frame review → taste decisions side by side → captions, logos and colour → pacing → sound → render → QA → delivery, plus measured cloud-rendering sizing. It doesn't depend on the engine. |
 | [`engines/papermotion/`](engines/papermotion/) | The [papermotion](https://github.com/francozanardi/papermotion) paper cut-out engine with its own agent skill, a parallel/GPU renderer, reusable scene modules and the films. |
 | [`tools/`](tools/) | Engine-independent tools: a pre-delivery video check and a one-frame glitch scan, labelled contact sheets, shrink/mux/compare, WSL2 GPU setup and a probe, and audio analysis for films timed to a recording. |
 | [`media/`](media/) | The previews above. |
@@ -82,7 +84,7 @@ Measured on a laptop with an RTX 3060 (6 GB) under WSL2 with 12 GB of RAM, at 19
 
 More GPU workers stop helping once the card's memory fills (each takes about 0.4 GB). GPU frames aren't
 bit-exact and, rarely, one comes out with a garbage block, so always run `tools/video/check_video.sh` on a
-GPU render; CPU renders are bit-exact. [`cloud.md`](.claude/skills/film-production/references/cloud.md) has
+GPU render; CPU renders are bit-exact. [`cloud.md`](.agents/skills/film-production/references/cloud.md) has
 measured numbers for rendering on Lambda, Cloud Run and Modal.
 
 ## Engines

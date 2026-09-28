@@ -5,9 +5,9 @@ This project was created with `npm create papermotion`. It holds a copy of the p
 
 Read `README.md` first, and `docs/field-notes.md` before making a scene: it collects the mistakes
 made while building the engine and the fixes that worked. To make a short, use the skill in
-`.claude/skills/papermotion/` (or `.agents/skills/papermotion/`): workflow, API reference, art
+`.agents/skills/papermotion/` (or its copy in `.claude/skills/papermotion/`): workflow, API reference, art
 direction, pitfalls, sound and inspection. The repository's `film-production` skill
-(`../../.claude/skills/film-production/`) covers the production loop around it: review rounds, pacing,
+(`../../.agents/skills/film-production/`) covers the production loop around it: review rounds, pacing,
 the score, rendering, QA and delivery.
 
 Before writing a caption, a title, a walk, a sky, a photo, a score or sound effects from scratch, check

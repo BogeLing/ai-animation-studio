@@ -32,3 +32,9 @@ installs them into a throwaway environment. The transcription model downloads on
 | `check_video.sh` | `tools/video/check_video.sh film.mp4 [expected_frames] [frames_dir]`. The check before sending a film: duration, frames decoded against the expected count, decode errors, loudness and true peak, and (given the frames folder) a glitch scan. Exits non-zero on a frame-count mismatch. |
 | `glitch_scan.py` | `uv run tools/video/glitch_scan.py out/frames/<name> [--threshold 2.0] [--ratio 3.0]`. Flags single-frame glitches: a frame that differs from both neighbours while the neighbours match each other, such as a stale GPU texture drawn for one frame. Camera moves and cuts change both pairs, so they don't trip it. |
 | `tile.sh` | `tools/video/tile.sh sheet.jpg <cols> <tile_width> "label\|image" …`. A labelled contact sheet for review rounds and A/B comparisons, one ffmpeg pass per tile (several `drawtext` filters in one graph have crashed ffmpeg). Labels can be Chinese or Japanese: it picks a CJK font from `fc-list`. |
+
+## Skills
+
+| Script | Use |
+| --- | --- |
+| `sync-skills.sh` | `tools/sync-skills.sh`. Copies each skill from `.agents/skills/` (the open Agent Skills location, which Codex and other agents read) to `.claude/skills/` (which Claude Code reads), at the repository root and in every engine. Edit the `.agents` copy, then run it; `pnpm test` in `engines/papermotion/` fails while the copies differ. Copies rather than symlinks, because Windows checkouts turn symlinks into plain text files. |

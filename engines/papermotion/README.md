@@ -99,6 +99,6 @@ CPU workers are.
 - `package.json`: pins pnpm 11.1.3 and adds `render:fast`, `render:detached`, `bench` and `smoke`.
 
 The engine in `src/` is licensed under MIT by Franco Zanardi (`src/LICENSE`, also copied to `LICENSE`).
-`AGENTS.md`, `docs/field-notes.md` and the skill in `.claude/skills/papermotion/` come from upstream and
+`AGENTS.md`, `docs/field-notes.md` and the skill in `.agents/skills/papermotion/` (copied to `.claude/skills/`) come from upstream and
 explain how to make new films with an agent; the repository's `film-production` skill covers the
 production loop around them.
