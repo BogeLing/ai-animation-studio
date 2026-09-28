@@ -25,9 +25,9 @@ installs them into a throwaway environment. The transcription model downloads on
 
 | Script | Use |
 | --- | --- |
-| `mux.sh` | `tools/video/mux.sh video.mp4 audio.wav out.mp4 [gain_db]`. Puts a sound track under a video, copying the picture as it is; the result is as long as the shorter input. |
-| `shrink.sh` | `tools/video/shrink.sh in.mp4 out.mp4 [max_mb=25]`. Two-pass x264 to fit a size budget, for upload limits and chat apps. Film grain makes these films large at fixed quality. |
-| `compare.sh` | `tools/video/compare.sh a.mp4 "Label A" b.mp4 "Label B" out.mp4`. Two videos side by side, labelled, with the sound from the left one. |
+| `mux.sh` | `tools/video/mux.sh video.mp4 audio.wav out.mp4 [gain_db]`. Puts a sound track under a video, copying the picture as it is (range included); the result is as long as the shorter input. |
+| `shrink.sh` | `tools/video/shrink.sh in.mp4 out.mp4 [max_mb=25]`. Two-pass x264 to fit a size budget, for upload limits and chat apps. Film grain makes these films large at fixed quality. The output is limited (tv) range, the standard players and platforms expect. |
+| `compare.sh` | `tools/video/compare.sh a.mp4 "Label A" b.mp4 "Label B" out.mp4`. Two videos side by side, labelled, with the sound from the left one, in limited (tv) range whatever the inputs' ranges. |
 | `count_frames.py` | `python3 tools/video/count_frames.py out/film.mp4`. Counts frames already encoded into a video-only MP4 that's still being written, to see how far a render got. |
 | `check_video.sh` | `tools/video/check_video.sh film.mp4 [expected_frames] [frames_dir]`. The check before sending a film: duration, frames decoded against the expected count, decode errors, loudness and true peak, and (given the frames folder) a glitch scan. Exits non-zero on a frame-count mismatch. |
 | `glitch_scan.py` | `uv run tools/video/glitch_scan.py out/frames/<name> [--threshold 2.0] [--ratio 3.0]`. Flags single-frame glitches: a frame that differs from both neighbours while the neighbours match each other, such as a stale GPU texture drawn for one frame. Camera moves and cuts change both pairs, so they don't trip it. |
