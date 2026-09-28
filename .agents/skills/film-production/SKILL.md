@@ -1,6 +1,6 @@
 ---
 name: film-production
-description: End-to-end production workflow for animated short films that an AI agent writes as code in this repo (papermotion paper cut-out today). It covers turning a brief (a story, a script, an audio clip, a CV) into stations and a storyboard, then iterating with small batches of key-frame review images. It also covers side-by-side comparisons for taste decisions, paper captions and titles, logos and colour, and a code-synthesized score and foley from the shared modules. Finally it covers pacing with slow-motion transitions, fast parallel GPU rendering, glitch QA, compression and delivery, and sizing cloud rendering (Lambda, Cloud Run, Modal, Spot). Use when making, revising, re-timing, re-scoring, rendering, checking or delivering a film in this repo, or when asked how to render one faster or in the cloud.
+description: End-to-end production workflow for animated short films that an AI agent writes as code in this repo (papermotion paper cut-out today). It covers turning a brief (a story, a script, an audio clip, a CV) into stations and a storyboard, then iterating with small batches of key-frame review images. It also covers side-by-side comparisons for taste decisions, paper captions and titles, logos and colour, and a code-synthesized score and foley from the shared modules. Finally it covers pacing with slow-motion transitions, fast parallel GPU rendering, glitch QA, compression and delivery, and sizing cloud rendering (Lambda, Cloud Run, Modal, Spot). Use when making, revising, re-timing, re-scoring, scouting the camera for, rendering, checking or delivering a film in this repo, or when asked how to render one faster or in the cloud.
 compatibility: Node 24 with corepack pnpm, ffmpeg, and Google Chrome or Playwright's Chromium (found automatically; CHROMIUM_PATH or CHROME_PATH override it). uv for the Python tools. The GPU path was measured on WSL2 with an NVIDIA card and on an Apple M4 Mac (Metal).
 metadata:
   project: ai-animation-studio
@@ -21,6 +21,7 @@ in `.claude/skills/` for Claude Code).
 | `engines/papermotion/` | The engine (`src/`), its scripts (render, parallel/GPU render, grab, listen, smoke), tests, and the films in `examples/`. Work from here; `pnpm` may not be on PATH, so use `corepack pnpm`. |
 | `engines/papermotion/examples/shared/` | The cast (`Clawd`, `PaperPlane`) and the scene modules listed below. |
 | `engines/papermotion/examples/ubc/`, `showcase/` | Two 12 s films that use every scene module: a real campus tour and a made-up world. Read them to see the modules working together. |
+| `engines/papermotion/examples/diorama/` | A paper village built in 3D whose camera move was chosen with `pnpm scout`. Read it before building a set in 3D. |
 | `tools/` | Engine-independent tools: video (check, glitch scan, contact sheets, shrink, mux, compare), WSL2 GPU setup, a GPU probe, audio analysis. |
 
 ## The loop
@@ -28,16 +29,19 @@ in `.claude/skills/` for Claude Code).
 1. **Plan**: brief → chapters → one world with a station per chapter → a timeline table.
 2. **Storyboard**: grab 1–2 frames per second into labelled contact sheets. From then on, iterate on **key
    frames only** (2–6 images per round), never full renders.
-3. **Decide taste questions with evidence**: render the options on the same frame side by side, look at
+3. **Scout the camera** (sets in 3D): the key moment of each beat from 6–9 shot setups side by side, with
+   numbers (`pnpm scout`); drop what the numbers reject, judge the rest by eye, then check the whole move
+   frame by frame ([references/camera.md](references/camera.md)).
+4. **Decide taste questions with evidence**: render the options on the same frame side by side, look at
    them yourself, recommend one, and let the user choose ([references/design-review.md](references/design-review.md)).
-4. **Captions, titles, logos and colour**: physical paper, logos printed unmodified, one harmonious palette
+5. **Captions, titles, logos and colour**: physical paper, logos printed unmodified, one harmonious palette
    ([references/design-review.md](references/design-review.md)).
-5. **Pacing pass**: slow the transitions, not the chapters ([references/pacing.md](references/pacing.md)).
+6. **Pacing pass**: slow the transitions, not the chapters ([references/pacing.md](references/pacing.md)).
    Do this **before** the final score, because the music is laid out on the video clock.
-6. **Sound**: sparse foley on the story's beats, plus one consistent score ([references/sound.md](references/sound.md)).
-7. **Render, QA, deliver**: one render at a time, verify, scan for glitch frames, compress, send
+7. **Sound**: sparse foley on the story's beats, plus one consistent score ([references/sound.md](references/sound.md)).
+8. **Render, QA, deliver**: one render at a time, verify, scan for glitch frames, compress, send
    ([references/render-qa.md](references/render-qa.md)).
-8. **Cloud (only if asked or needed)**: size it from measurements ([references/cloud.md](references/cloud.md)).
+9. **Cloud (only if asked or needed)**: size it from measurements ([references/cloud.md](references/cloud.md)).
 
 ## Scene modules (`examples/shared/`)
 
@@ -141,6 +145,7 @@ every sound by `videoTime`, and lay the score out from the chapters' video times
 | Tool | Use |
 | --- | --- |
 | `pnpm grab <name> <seconds…> [--query=…] [--out=dir] [--probe]` | Key frames (and the stage's probe) at those times, plus a contact sheet. `--query` passes URL params for variants. |
+| `pnpm scout <name> <seconds> [--setups=…]`, `pnpm scout <name> --path[=…]` | Sets in 3D: one moment from several shot setups side by side with numbers (seen, size, clutter); or the film's own camera move, or a candidate from a file, checked frame by frame with a preview. On the GPU. |
 | `pnpm listen <name>` | The soundtrack alone: cue list in video time, loudness, `out/<name>.wav` and a spectrogram. |
 | `pnpm render:fast <name> --workers 6 --gpu --codec nvenc` | The parallel renderer (CPU without `--gpu`; `--codec x264\|nvenc\|videotoolbox\|hw`); `--range a:b` for part of a film, `--bench` to time it. |
 | `pnpm render:detached <name> [render:fast options]` | One guarded, detached render; the log is `out/<name>_render.log` and ends with an `EXIT` line. |

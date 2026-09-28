@@ -372,3 +372,35 @@ Clawd, a snowball that grows until it escapes down a hill, and a tree that drops
   (the old print visible next to the new hand), then slide in.
 - **Fire cues drown everything.** A crackle bed with `crackle` near 1 multiplies the noise several times; it
   needs a gain around 0.03–0.05 or it fills the whole spectrum. Read the spectrogram before the render.
+
+## 16. A paper village in 3D, and scouting its camera (`diorama`)
+
+- **Trim projected polygons to the frame.** A ground disk that runs behind the lens, clipped at the near plane,
+  projects to edges hundreds of thousands of px long, and `Paper`'s torn edge resamples every few px: frames
+  took 529 ms on the GPU and 921 ms on the CPU. `Camera3D.polygon` now also trims to the frame plus 200 px;
+  the same frames take 30 ms and 99 ms.
+- **Sample the whole subject.** Scouting samples that stopped short of the feet and the top of the head
+  measured every shot about a quarter too small (a medium shot at 22 % of the frame instead of 30 %). `billboard` spans the full
+  height now, and a test pins the size to focal × height ÷ distance.
+- **The path check finds what single frames miss.** Three setups each looked clean, yet a pop-up tree swung up
+  across Clawd for six frames on the way between them (seen 81 %). Moving the tree 0.8 m fixed it; fix the set
+  before bending the camera around it.
+- **Numbers reject, eyes choose.** The numbers caught a wall 0.4 m from the lens and a reverse shot hidden
+  behind a house; only looking caught Clawd's orange merging with a red-brown house behind it.
+- **Let the rig carry a hop.** With the hop's height taken from the rig's own leap (`clawd.hop`, its length
+  matched to the hop period: height = g·T²/8), the contact shadow stays on the ground while the body rises.
+
+## 17. 2.5D cuts of 2D films (`plane25d`, `ubc25d`)
+
+- **Only the camera changes.** Every scene draws through `cam.layer(paper, depth, …)`, so a `DepthCamera` that stands
+  each layer as a sheet at `distance / depth` re-shoots the whole film: same simulation, same sound, same render
+  speed (plane 32 ms a frame either way on 2 Metal workers).
+- **Use a long lens.** With a 32° lens, a 12° swing made each sheet's perspective 24 % uneven from one side of the
+  frame to the other, and the affine map each layer is drawn with missed by 70 px. At height × 4 (14°), a 6° swing
+  already slides the far hills 390 px, and the map is exact at the middle of the frame.
+- **Draw what the map covers.** The part of each layer to draw comes from taking the frame's corners back through
+  the same map, so no corner shows through; `toScreen` uses that map too, so a photo leaving Clawd's hand stays on
+  the drawn hand.
+- **Screen-space paint doesn't move.** Craning 1° lifted the hills 75 px over the plane film's painted horizon, so
+  both cuts only orbit. UBC's sun now hangs in `cam.layer(paper, 0, …)`: exact screen space for `Camera` (the
+  original's frames hash the same before and after) and at infinity for `DepthCamera`.

@@ -8,6 +8,10 @@ pnpm grab <name> 0.5 2 4.2 7           # + frames out/grab/<name>_<t>.jpg and ou
 pnpm render <name>                     # the real video: out/<name>.mp4 (minutes for heavy scenes)
 pnpm sheet <name> [fps=2] [from=0] [seconds=10]   # out/<name>_sheet_<from>.jpg from the video
 pnpm listen <name>                     # soundtrack only: cue list, loudness, out/<name>_audio.png
+pnpm scout <name> 3.4                  # a scene in 3D: one moment from nine shot setups, with numbers
+pnpm scout <name> 3.4 --setups=s.json  # your own setups (the fields of ShotSetup)
+pnpm scout <name> --path              # the film's own camera move: strip, preview.mp4, numbers per frame
+pnpm scout <name> --path=move.json     # the same for a candidate move (shot setups at times)
 pnpm typecheck && pnpm test
 ```
 
@@ -36,6 +40,25 @@ pnpm typecheck && pnpm test
    (falls, jumps, cuts).
 5. **Measure motion problems numerically.** Log how far points move per frame. Anything over about 12
    px in one frame on a strand is a jump.
+
+## Scouting a camera in 3D
+
+`pnpm scout` draws on the GPU (`--cpu` to force the CPU; the numbers are the same) and writes to `out/scout/`.
+Each tile is labelled with numbers from the scene's `scout(view)`:
+- `seen`: the share of the subject no piece hides; `size`: its share of the frame's height;
+- `near`: the distance to the nearest piece through the frame; `clutter`: the share of the frame where a piece
+  is closer than 4 units; `OUT OF FRAME` when part of the subject leaves the frame.
+
+1. **Reject by the numbers:** `seen` under 90, `OUT OF FRAME`, any `clutter` (unless it is a deliberate
+   foreground frame).
+2. **Judge the rest by eye:** does the subject stand out from what is behind it (value and colour), do lines
+   lead to it, is there headroom and room to move into? Numbers can't see a subject merging with a wall of
+   the same colour.
+3. **Check the whole move** with `--path`: it prints the worst of each number over every frame. A turn above
+   about 30°/s reads as a whip pan; travel is in subject heights per second.
+
+In the `diorama` example, the path check caught a pop-up tree swinging up across Clawd for six frames
+(`seen 81`); moving the tree fixed it.
 
 ## What to look for in every pass
 

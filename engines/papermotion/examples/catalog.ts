@@ -24,6 +24,18 @@ export const EXAMPLES: Record<string, () => Promise<MakeStage>> = {
     const { ShowcaseScene } = await import('./showcase/main');
     return canvas => new ShowcaseScene(canvas);
   },
+  diorama: async () => {
+    const { DioramaScene } = await import('./diorama/main');
+    return canvas => new DioramaScene(canvas);
+  },
+  plane25d: async () => {
+    const { PlaneScene } = await import('./plane/main'), { depthCamera } = await import('./plane/depth');
+    return canvas => new PlaneScene(canvas, { camera: depthCamera });
+  },
+  ubc25d: async () => {
+    const { UbcScene } = await import('./ubc/main'), { depthCamera } = await import('./ubc/depth');
+    return canvas => new UbcScene(canvas, { camera: depthCamera });
+  },
   tutorial: async () => {
     // The narration (public/voice/tutorial.flac and .json, from tools/voice/narrate.py) is decoded before the stage is built.
     const { TutorialScene, loadVoice } = await import('./tutorial/main');

@@ -1,5 +1,5 @@
 import {
-  Beats, Camera, type Framing, type PropSet, type RidgeSpec, Spring, Stage, type Stereo, type SwardSpec, type V, type View,
+  Beats, Camera, type Framing, type MakeCamera, type PropSet, type RidgeSpec, Spring, Stage, type Stereo, type SwardSpec, type V, type View,
   circlePoly, clamp, drawProps, drawRidge, drawSward, fillGradient, flora, grain, noise1, ridgeHeight, rng, scatter,
   smoothstep, vignette, wash,
 } from '../../src';
@@ -46,7 +46,7 @@ type Flight = 'held' | 'out' | 'stall' | 'back' | 'perched';
  * and lands on Clawd's head. Clawd is delighted.
  */
 export class PlaneScene extends Stage {
-  private readonly cam = new Camera(870, { width: W, height: H, stiffness: 9, damping: 6, handheld: 3, ease: 2.4 });
+  private readonly cam: Camera;
   private readonly clawd = new Clawd({ ...HOME }, U, 400, [0.3, 1.8]);
   private readonly plane = new PaperPlane(HOME, -0.7, 800);
   private readonly act: Beats<Act>;
@@ -63,8 +63,10 @@ export class PlaneScene extends Stage {
   /** Where the dart has just been, drawn as a fading vellum streak so the loop reads. */
   private readonly trail: V[] = [];
 
-  constructor(canvas: HTMLCanvasElement) {
+  /** `camera` films it with another camera, e.g. a `DepthCamera` for the 2.5D cut. */
+  constructor(canvas: HTMLCanvasElement, o: { camera?: MakeCamera } = {}) {
     super(canvas, { duration: 5, preroll: 0.6 });
+    this.cam = (o.camera ?? ((x, opts) => new Camera(x, opts)))(870, { width: W, height: H, stiffness: 9, damping: 6, handheld: 3, ease: 2.4 });
     this.paper.light = { x: -0.62, y: 0.78 };
     const c = this.clawd, p = this.plane;
     const lookAt = (q: V): V => {

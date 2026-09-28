@@ -183,6 +183,13 @@ Every stage has `this.paper`, the `Paper` renderer.
     touching zoom.
   - **Coordinates:** `.toLayer(worldX, depth)` gives where to place scenery on a far layer.
     `.toScreen(p, depth)` gives the screen position.
+- `DepthCamera(x, opts, { distance?, focal?, orbit?(t), crane?(t) })`: a drop-in `Camera` for a 2.5D cut. It films
+  the same layers as sheets standing at real distances through a perspective lens (a multiplane camera): with no
+  orbit or crane it frames every layer as `Camera` does; `orbit` and `crane` (degrees over scene time) swing the
+  lens around the framed point, so near sheets slide across far ones. Depth 0 is the sky at infinity (it only turns
+  with the lens). The default long lens (height × 4) makes 2–8° of swing read strongly. A scene that builds its
+  camera through `{ camera?: MakeCamera }` gets a 2.5D cut in one line; paint drawn straight on the screen (a sky
+  gradient) doesn't move with it, so orbit rather than crane over it.
 - `Beats<B>(first, { [beat]: { enter?, during?, exit?, next?, after?, then? } })`: a state machine for a
   performance. `.update(t, dt)`, `.current`, `.since(t)`, `.startOf(b)`, `.reached(b)`, `.history`.
   `next` returns a beat name to switch; `after` + `then` is a timed fallback.
@@ -192,6 +199,50 @@ Every stage has `this.paper`, the `Paper` renderer.
 - **Timeline helpers:** `ramp(t, a, b)`, `envelope(t, a, b, c, d)`, `blink(t, times)`,
   `keys(t, [[time, value], …])`, `speedRamp([{ from, to, rate }])` (for `StageOptions.rate`, slow
   motion).
+
+## 3D: cameras, shots and dioramas
+
+For sets built in 3D (a paper theatre, a pop-up book) instead of parallax layers. World axes: x right, y up,
+z toward the viewer of an unturned camera; units are whatever the set uses (the `diorama` example uses metres).
+- **Vectors:** `V3 { x, y, z }` with `add3`, `sub3`, `scale3`, `dot3`, `cross3`, `len3`, `dist3`, `norm3`,
+  `lerp3`, `yaw3(p, angle, about?)` (positive swings +z toward +x), `centroid3`, `normal3(poly)` (points to the
+  side the polygon winds counterclockwise from), `crossing(from, to, poly)` (where a segment passes through a
+  polygon, 0…1, or null).
+- `Camera3D(width, height, view?)`: a pinhole camera. `View3 { pos, target, focal, roll? }`; `focal` is in px
+  (default `height × 1.76`, a 32° vertical field of view; `focalFor(degrees, height)`).
+  - `.set(view)`, `.view`, `.axes`, `.fov`, `.near` (the clip distance).
+  - `.project(p) → { x, y, depth, scale }` (px, and px per world unit there); `.polygon(pts) → V[] | null`,
+    clipped at the near plane and trimmed to the frame plus a margin, ready for `paper.piece`;
+    `.direction(d)` (the sun); `.ray(x, y)`; `.horizon(x?)` (screen y, for the sky); `.box(pts)` (screen box
+    as fractions, and `inFrame`).
+- `shot(subject, setup, frame) → View3`: a camera placed the way a director describes a shot.
+  - `Subject { at, height, facing? }`: the ground point it stands on, and the way it faces (rad, 0 = +z).
+  - `ShotSetup { size, bearing?, elevation?, aim?, place?, focal?, roll? }`. `size` is the subject's share of
+    the frame's height, a number or a name from `SHOT_SIZES` (establishing 0.06, wide 0.14, medium 0.3,
+    full 0.55, close 1.1). `bearing`: degrees around from its front, positive to its left. `elevation`:
+    degrees above, negative for a low angle. `place`: where the aim point lands on screen (thirds, room to
+    move into).
+- `CameraPath([{ at, view, hold? }])`: a camera move through views at scene times. It passes every key exactly,
+  is smooth through the middle ones, starts and ends at rest, stops at `hold` keys and zooms in log space.
+  `.at(t) → View3`, `.motion(t, dt) → { speed, turn (°/s), zoom }`; `motionBetween(a, b, dt)` for any two views.
+- `Diorama({ light, ground, shadow, fog, shade })`: paper faces placed in 3D, drawn through a `Camera3D` with
+  `Paper`.
+  - `.floor: Face[]`: the ground, roads, ponds, drawn first and in order.
+  - `.pieces: Piece[]`: `{ faces, at?, casts? }`, sorted back to front as wholes.
+  - `.actors: Actor[]`: `{ at, height, art, draw(paper, scale) }`, 2D art (a rig) standing in the world and
+    facing the camera, `art` px tall in its own drawing with its feet at (0, 0).
+  - `Face { pts, color, back?, seed, solid?, flat?, tear?, texture?, decals? }`: planar and counterclockwise
+    from its front. `solid` faces belong to a closed convex shape and are skipped when facing away; other
+    faces are cards that show `back` from behind; `decals` (doors, windows) sit on a face.
+  - `.draw(paper, cam)`: the floor, the pieces' shadows on the ground along `light`, then pieces and actors
+    back to front, each face lit by the sun, faded into the air (`fog`) and torn like paper.
+  - **Builders:** `panel(outline, at, yaw?, tilt?)` (a card; `tilt` −π/2 lies flat, for pop-ups),
+    `groundPoly(outline, y?)`, `prism(outline, depth, at, yaw, { color, seed, sides? })` (houses, walls, boxes).
+  - **Scouting numbers:** `.judge(cam, billboard(at, width, height, cam.pos)) → { visible, height, x, y,
+    inFrame, nearest, close }`, built from `.visible(points, cam)` and `.clutter(cam, near?)`.
+  - **Limits:** pieces sort as wholes (the painter's algorithm), so keep them apart; pieces that pass through
+    each other can sort wrongly. Shadows fall only on the ground plane. Actors always face the camera, so
+    shots from behind them don't work.
 
 ## audio
 
@@ -231,6 +282,10 @@ preroll=0.6, rate? })`.
   - `lateUpdate(t, dt)`: after physics: cameras, contacts;
   - `draw(t, frame)`;
   - `probe()`: numbers for inspection.
+- **Scouting (scenes in 3D):** return the scene's own camera from `cameraView(t)` and draw from
+  `this.scouting ?? this.cameraView(t)`; list the cast in `subjects()` (`Record<string, Subject>`); return numbers
+  for a view from `scout(view)` (usually `set.judge(…)`). `renderShot(n, view)` draws frame n from another view
+  without touching the simulation; `pnpm scout` uses it.
 - **Fields:** `this.world`, `this.paper`, `this.ctx`, `this.time`, `this.dt`, `this.settling` (true
   during the pre-roll).
 - **Screen-space finishing** (after all layers):

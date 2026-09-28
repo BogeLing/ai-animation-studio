@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "grab": "node scripts/grab.ts",
+    "scout": "node scripts/scout.ts",
     "sheet": "node scripts/sheet.ts",
     "listen": "node scripts/listen.ts",
     "render:fast": "node scripts/render-parallel.ts",

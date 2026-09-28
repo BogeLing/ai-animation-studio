@@ -59,6 +59,15 @@ export { type SwardSpec, drawSward } from './scenery/sward';
 
 // Camera
 export { Camera, type CameraOpts, type Framing, type View } from './camera/Camera';
+export { DepthCamera, type DepthOpts, type MakeCamera, type LayerFit } from './camera/DepthCamera';
+
+// 3D: vectors, a pinhole camera, shots and camera moves, and paper pieces placed in 3D (a diorama)
+export * from './core/math3';
+export { Camera3D, type View3, type Projected } from './camera/Camera3D';
+export { shot, focalFor, SHOT_SIZES, type ShotSize, type ShotSetup, type Subject } from './camera/shot';
+export { CameraPath, motionBetween, type PathKey, type CameraMotion } from './camera/CameraPath';
+export { Diorama, type Face, type Piece, type Actor, type DioramaOpts, type ShotNumbers } from './diorama/Diorama';
+export { panel, groundPoly, prism, billboard } from './diorama/solids';
 
 // Direction: choreography and time-shaped intents
 export { Beats, type BeatSpec, type BeatContext, type BeatLog } from './direction/Beats';
@@ -67,7 +76,7 @@ export { Edit, type ShotSpec } from './direction/Edit';
 
 // Stage: scenes, playback, overlays, film finishing
 export { Stage, type StageOptions } from './stage/Stage';
-export { mount, type MountOptions, type StageHooks } from './stage/player';
+export { mount, type MountOptions, type StageHooks, type Scouted } from './stage/player';
 export { fillGradient, vignette, caption, type CaptionOpts } from './stage/overlay';
 export { grade, grain, wash, letterbox } from './stage/grade';
 export { tearWipe, irisWipe, type WipeOpts } from './stage/transition';

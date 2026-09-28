@@ -85,6 +85,10 @@ counter, so it never drifts.
 - **Parallax.** A layer at depth `d` shows x near `x * d`. When you scatter scenery for a far layer,
   center it with `cam.toLayer(x, d)`, not on world x. This matters most when the action is far from
   x = 0.
+- **A 2.5D cut of a 2D film.** Let the scene take `{ camera?: MakeCamera }` and build its camera through it; then
+  `new Scene(canvas, { camera: (x, o) => new DepthCamera(x, o, { orbit: t => keys(t, […]) }) })` films the same layers
+  as sheets at real distances (`plane/depth.ts`, `ubc/depth.ts`). Put anything painted at infinity, such as a sun,
+  in `cam.layer(paper, 0, …)`: exact screen space for `Camera`, turning with the lens for a `DepthCamera`.
 - **Depth of field.** Draw background layers inside `paper.layer(1, () => cam.layer(paper, …),
   'source-over', 'blur(6px)')`. Always pass `paper` (not `ctx`) to `cam.layer`, so the transform reaches
   the offscreen canvas.
@@ -119,6 +123,44 @@ const edit = new Edit<'wide' | 'close' | 'after'>('wide', {
   3. Draw the outgoing act, then call `tearWipe(ctx, u, () => drawIncoming())` or `irisWipe(ctx, u,
      center, …)` for about 0.9 s.
 - Open an iris from something in the frame: `cam.toScreen(moon, depth)`.
+
+## Sets in 3D (`Diorama`)
+
+When the camera should move through a set rather than along it (crane down, circle round, push in), build the set
+in 3D with `Diorama` and film it through a `Camera3D`. The `diorama` example is the reference.
+
+```ts
+export class Scene extends Stage {
+  private readonly set = village();                    // a Diorama: floor, pieces, actors
+  private readonly cam = new Camera3D(1920, 1080);
+  private readonly path = new CameraPath(MOVE.map(k => ({ at: k.at, view: shot(heroAt(k.at), k.setup, FRAME) })));
+
+  cameraView(t: number) { return this.path.at(t); }    // the scene's own camera (`pnpm scout --path` checks it)
+  subjects() { return { hero: heroAt(this.time) }; }  // what `pnpm scout` can frame
+  protected scout(view: View3) {                       // numbers for a scouted view
+    const cam = this.cam.set(view);
+    return { ...this.set.judge(cam, billboard(this.spot, 0.9, 1.2, cam.pos)) };
+  }
+  protected draw(t: number) {
+    const cam = this.cam.set(this.scouting ?? this.cameraView(t));   // a scouted view wins while scouting
+    // sky down to cam.horizon(), then:
+    this.set.draw(this.paper, cam);
+    if (!this.scouting) captions.draw(this.paper, t);
+  }
+}
+```
+
+- **Describe shots, don't place cameras.** Each key is `shot(subject, { size, bearing, elevation, place })` for
+  the subject where it stands at that time, so the move follows the story.
+- **Scout before you render** (`pnpm scout`, see inspection.md): the key moments from 6–9 setups side by side,
+  then the whole move frame by frame.
+- **Keep pieces apart.** Pieces sort back to front as wholes; two that pass through each other (a tree through a
+  roof) can swap order. Split big things into pieces, or move them.
+- **Actors are 2D rigs standing in the world**, drawn with their feet at (0, 0) and always facing the camera, so
+  keep the camera on the side they face. Scale line weights with the `scale` passed to `draw` (`clawd.lens`).
+  Let a hop's lift come from the rig (`clawd.hop`), so its contact shadow stays on the ground.
+- **Pop-ups:** rebuild a `panel`'s faces each step with a `tilt` from −π/2 (flat) to 0 (standing), eased with
+  `overshoot`.
 
 ## Motion design
 

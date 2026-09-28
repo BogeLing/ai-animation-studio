@@ -50,7 +50,8 @@ export class Camera {
     return this.follow.pos.x + noise1(this.t * 0.9, 31) * this.handheld;
   }
 
-  private get y(): number {
+  /** Where the camera looks on the action plane, vertically: the frame is centred on (x, height / 2 + y), handheld drift included. */
+  get y(): number {
     return this.followY.pos.y + noise1(this.t * 0.8, 32) * this.handheld * 0.7;
   }
 

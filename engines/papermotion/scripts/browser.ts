@@ -49,12 +49,13 @@ export async function canvasBackend(browser: Browser): Promise<{ gpu: boolean; s
 
 export interface Session { server: ViteDevServer; browser: Browser; page: Page; base: string; close(): Promise<void> }
 
-export async function open(): Promise<Session> {
+/** A Vite server and a headless Chrome page on it, drawing on the CPU (bit-exact, the default) or on the GPU. */
+export async function open(draw: Draw = 'cpu'): Promise<Session> {
   // No HMR and no file watching: editing sources while a script runs must not reload the page.
   const server = await createServer({ server: { port: 0, hmr: false, watch: null }, logLevel: 'error' });
   await server.listen();
   const base = server.resolvedUrls!.local[0].replace(/\/$/, '');
-  const browser = await launch();
+  const browser = await launch(draw);
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   return { server, browser, page, base, close: async () => { await browser.close(); await server.close(); } };
 }

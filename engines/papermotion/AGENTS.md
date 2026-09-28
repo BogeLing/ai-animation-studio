@@ -35,6 +35,8 @@ house style, so they live next to the cast rather than in `src/`; generic primit
 - TypeScript strict. One class per file, named after the class; function modules use camelCase.
 - TSDoc on public API. Minimal inline comments: explain the non-obvious, not the code.
 - Scenes live in `examples/<name>/` and are registered in `examples/catalog.ts`.
+- A set in 3D is a `Diorama` filmed through a `Camera3D`; describe its camera with `shot` and `CameraPath`, and
+  scout it with `pnpm scout` before rendering (the `diorama` example).
 - Scenes import only from the public API (`../../src`), never from engine internals.
 - Tests live in `tests/` (Vitest, node environment); anything that needs a canvas is checked by rendering.
 
@@ -46,6 +48,8 @@ pnpm dev                       # vite on :5299 — /?example=hello plays the ren
 pnpm grab hello 1 2 3 [--probe]  # frames and/or probes at those seconds → out/grab/
 pnpm sheet hello               # contact sheet of out/hello.mp4
 pnpm listen hello              # soundtrack only (scenes with a `soundtrack`): wav, spectrogram, loudness, cues
+pnpm scout diorama 3.4         # a set in 3D: one moment from nine shot setups, with numbers → out/scout/
+pnpm scout diorama --path      # its camera move checked frame by frame, with a preview video
 pnpm test
 pnpm typecheck
 ```

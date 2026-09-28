@@ -1,5 +1,7 @@
 import type { Stereo } from '../audio/dsp';
 import { type CueOpts, SoundLog } from '../audio/SoundLog';
+import type { View3 } from '../camera/Camera3D';
+import type { Subject } from '../camera/shot';
 import { Paper } from '../paper/Paper';
 import { World } from '../physics/World';
 
@@ -128,6 +130,39 @@ export abstract class Stage {
   probe(): Record<string, unknown> {
     return { t: +this.clock.toFixed(2) };
   }
+
+  /**
+   * While a shot is being scouted (see `renderShot`), the view to draw from instead of the scene's own camera;
+   * null otherwise. A scene in 3D draws from `this.scouting ?? itsOwnView`.
+   */
+  protected scouting: View3 | null = null;
+
+  /**
+   * Simulate up to frame `n` and draw it from `view` instead of the scene's own camera, to scout shots. The
+   * simulation never sees the view, so one moment can be drawn from many places. Returns the scene's `scout`
+   * numbers for the view.
+   */
+  renderShot(n: number, view: View3): Record<string, unknown> {
+    this.advance(n);
+    this.scouting = view;
+    try {
+      this.paper.setFrame(n);
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      this.draw(this.time, n);
+      return this.scout(view);
+    } finally {
+      this.scouting = null;
+    }
+  }
+
+  /** The scene's own camera at scene time `t`, for scenes in 3D (`pnpm scout <name> --path` checks it); null in 2D. */
+  cameraView(_t: number): View3 | null { return null; }
+
+  /** What a shot can be about, by name, as it stands now (see `shot`). Scenes in 3D list their cast here. */
+  subjects(): Record<string, Subject> { return {}; }
+
+  /** Numbers that judge `view` of the scene as it is now: a subject's size and visibility, clutter near the lens. */
+  protected scout(_view: View3): Record<string, unknown> { return {}; }
 
   /** Fire a sound event now (ignored during the pre-roll). */
   protected cue(name: string, o?: CueOpts): void {

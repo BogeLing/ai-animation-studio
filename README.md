@@ -55,7 +55,7 @@ same files in `.claude/skills/` for Claude Code.
 | Path | What |
 | --- | --- |
 | [`.agents/skills/film-production/`](.agents/skills/film-production/) | The production workflow as an agent skill (copied to `.claude/skills/` for Claude Code): brief → storyboard → key-frame review → taste decisions side by side → captions, logos and colour → pacing → sound → render → QA → delivery, plus measured cloud-rendering sizing. It doesn't depend on the engine. |
-| [`engines/papermotion/`](engines/papermotion/) | The [papermotion](https://github.com/francozanardi/papermotion) paper cut-out engine with its own agent skill, a parallel/GPU renderer, reusable scene modules and the films. |
+| [`engines/papermotion/`](engines/papermotion/) | The [papermotion](https://github.com/francozanardi/papermotion) paper cut-out engine with its own agent skill, a parallel/GPU renderer, reusable scene modules, sets in 3D with camera scouting, and the films. |
 | [`tools/`](tools/) | Engine-independent tools: a pre-delivery video check and a one-frame glitch scan, labelled contact sheets, shrink/mux/compare, WSL2 GPU setup and a probe of what Chrome draws with, and audio analysis for films timed to a recording. |
 | [`media/`](media/) | The previews above. |
 
@@ -76,6 +76,24 @@ with TSDoc and an example. The `ubc` and `showcase` films use them all.
 | `narration.ts` | A voice track with the time of every word: boards fill in on the narrator's words and subtitles follow the voice. `tools/voice/narrate.py` voices a script locally with Kokoro-82M. |
 | `kit.ts` | Pop-up helpers (one-sheet props, entrances, shapes, cartoon faces) and a clock that fires each sound cue exactly once. |
 | `Clawd.ts`, `Plane.ts` | The cast: a paper rig of the Claude Code mascot, and a paper dart that flies along a track. |
+
+## Sets in 3D and camera scouting
+
+A set can also be built in 3D and filmed through a perspective camera, still drawn as torn paper: `Diorama`
+places paper faces, pop-up cards and 2D rigs in the world, `shot` describes a camera the way a director would
+(size, bearing, elevation, where the subject sits), and `CameraPath` moves through shots. Before rendering, the
+agent scouts: `pnpm scout` draws a moment from several shot setups side by side with numbers that judge each
+(how much of the subject is seen, its size, clutter near the lens), then checks the whole camera move frame by
+frame. The `diorama` film (8 s, a paper village) was made this way.
+
+Any 2D film here can also be re-shot in 2.5D: `DepthCamera` films its parallax layers as sheets standing at real
+distances and swings the lens round the action, so near layers slide across far ones. `plane25d` and `ubc25d` are the
+`plane` and `ubc` films shot that way; only the camera changes.
+
+```bash
+pnpm scout diorama 3.4      # nine shot setups of one moment → out/scout/diorama_3.4s/sheet.jpg
+pnpm scout diorama --path   # the film's camera move, frame by frame, with a preview video
+```
 
 ## Rendering speed
 
@@ -118,7 +136,8 @@ Cloud Run and Modal.
 
 - This repository: MIT © 2026 Boge Ling ([`LICENSE`](LICENSE)).
 - The papermotion engine: MIT © 2026 Franco Zanardi ([`engines/papermotion/LICENSE`](engines/papermotion/LICENSE)).
-  `src/` is upstream's engine with one small addition (a `seek` hook for parallel rendering).
+  `src/` is upstream's engine plus a `seek` hook for parallel rendering and the 3D modules (camera, shots,
+  dioramas and scouting hooks).
 - The tutorial's narration is a synthetic voice, generated with [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0).
 - Montserrat: SIL Open Font License 1.1 ([`OFL-Montserrat.txt`](engines/papermotion/public/fonts/OFL-Montserrat.txt)).
 - Clawd is the Claude Code mascot by Anthropic, drawn here as fan art. This project is not affiliated with

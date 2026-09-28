@@ -1,5 +1,5 @@
 import {
-  Camera, type Paper, type PropSet, type RidgeSpec, Stage, type Stereo, type View, building, clamp, drawProps, drawRidge, flora, grain, rng,
+  Camera, type MakeCamera, type Paper, type PropSet, type RidgeSpec, Stage, type Stereo, type View, building, clamp, drawProps, drawRidge, flora, grain, rng,
   scatter, smoothstep, textWidth, vignette, wash,
 } from '../../src';
 import { Captions } from '../shared/captions';
@@ -53,7 +53,7 @@ const NEAR_HILLS: RidgeSpec = { seed: 42, base: 646, amp: 50, freq: 0.0026, colo
  * at each stop; the photos fan out into an album. Captions, a lo-fi score and paper foley throughout.
  */
 export class UbcScene extends Stage {
-  private readonly cam = new Camera(X[0] + FRAME_DX, { width: W, height: H, stiffness: 20, damping: 9, handheld: 1.6, ease: 4 });
+  private readonly cam: Camera;
   private readonly clawd = new Clawd({ x: X[0] - STAND - 1100, y: G }, 16, 2300, [1.5, 3.9, 6.1, 8.2, 11.1]);
   private readonly moments = new CueClock();
   private readonly title: TitleCard;
@@ -68,8 +68,10 @@ export class UbcScene extends Stage {
   /** Where the far campus lawn opens onto the water (layer x ranges at depth 0.5). */
   private readonly gaps: [number, number][];
 
-  constructor(canvas: HTMLCanvasElement) {
+  /** `camera` films it with another camera, e.g. a `DepthCamera` for the 2.5D cut. */
+  constructor(canvas: HTMLCanvasElement, o: { camera?: MakeCamera } = {}) {
     super(canvas, { duration: LENGTH, preroll: 0.4 });
+    this.cam = (o.camera ?? ((x, opts) => new Camera(x, opts)))(X[0] + FRAME_DX, { width: W, height: H, stiffness: 20, damping: 9, handheld: 1.6, ease: 4 });
     this.paper.light = { x: -0.5, y: 0.8 };
     this.clawd.width = 0.8;
     this.title = new TitleCard(this.ctx, {
@@ -174,7 +176,7 @@ export class UbcScene extends Stage {
   protected draw(t: number, frame: number): void {
     const { ctx, paper, cam } = this, d = this.day, day = dayAt(d);
     paintSky(ctx, day, HORIZON);
-    paintSun(paper, day);
+    cam.layer(paper, 0, () => paintSun(paper, day));   // the sun hangs at infinity: still for `Camera`, turning with a `DepthCamera`
     cam.layer(paper, 0.1, v => tinted(paper, day.sky[2], 0.15 + 0.35 * smoothstep(2.5, 4, d), () => drawProps(paper, this.clouds, v.from - 300, v.to + 300, () => 8, t)));
     cam.layer(paper, 0.12, v => drawRidge(paper, { ...FAR, color: day.hills[0] }, v.from, v.to, v.bottom + 400));
     cam.layer(paper, 0.18, v => drawRidge(paper, { ...NEAR_HILLS, color: day.hills[1] }, v.from, v.to, v.bottom + 400));
